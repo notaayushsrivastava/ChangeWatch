@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}{{ monitor.name }} — ChangeWatch{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- Header Breadcrumb & Actions -->
+  <div class="pb-4 border-b border-zinc-200/80 dark:border-zinc-800">
+    <div class="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500 mb-2 font-mono">
+      <a href="/dashboard" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Dashboard</a>
+      <span>/</span>
+      <span class="text-zinc-600 dark:text-zinc-300 truncate max-w-xs">{{ monitor.name }}</span>
+    </div>
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3">
+          <h1 class="text-3xl font-extrabold tracking-tight text-zinc-950 dark:text-zinc-100">{{ monitor.name }}</h1>
+          {% if monitor.state == 'paused' %}
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">Paused</span>
+          {% elif monitor.last_status == 'ok' %}
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> OK
+            </span>
+          {% elif monitor.last_status == 'blocked' %}
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">Blocked</span>
+          {% elif monitor.last_status == 'error' %}
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">Error</span>
+          {% else %}
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">Pending</span>
+          {% endif %}
+        </div>
+        <p class="text-xs text-zinc-400 dark:text-zinc-500 font-mono mt-1">
+          <a href="{{ monitor.url }}" target="_blank" rel="noopener noreferrer" class="hover:text-blue-600 dark:hover:text-blue-400 hover:underline inline-flex items-center gap-1.5">
+            {{ monitor.url }}
+            <svg class="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          </a>
+        </p>
+      </div>
+
+      <!-- Action Buttons (Island Row) -->
+      <div class="flex items-center flex-wrap gap-2.5">
+        <form action="/monitors/{{ monitor.id }}/check-now" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="btn-island bg-zinc-950 hover:bg-zinc-800 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white shadow-xs group">
+            <span>Check Now</span>
+            <div class="btn-island-icon bg-white/10 group-hover:bg-white/20">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            </div>
+          </button>
+        </form>
+
+        <a href="/monitors/{{ monitor.id }}/regions" class="btn-island bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-250 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 shadow-xs group">
+          <span>Choose Regions</span>
+          <div class="btn-island-icon bg-zinc-100 dark:bg-zinc-700 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-600 text-zinc-700 dark:text-zinc-200">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
+          </div>
+        </a>
+
+        {% if monitor.state == 'paused' %}
+        <form action="/monitors/{{ monitor.id }}/resume" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="px-4 py-2 bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-250 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-full text-xs font-bold transition-colors">
+            Resume
+          </button>
+        </form>
+        {% else %}
+        <form action="/monitors/{{ monitor.id }}/pause" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="px-4 py-2 bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-250 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-full text-xs font-bold transition-colors">
+            Pause
+          </button>
+        </form>
+        {% endif %}
+
+        <a href="/monitors/{{ monitor.id }}/edit" class="px-4 py-2 bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-250 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-full text-xs font-bold transition-colors">
+          Edit
+        </a>
+
+        <form action="/monitors/{{ monitor.id }}/delete" method="POST" onsubmit="return confirm('Delete this monitor and purge all historical snapshots?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="px-4 py-2 bg-white hover:bg-rose-50 dark:bg-zinc-800 dark:hover:bg-rose-950/60 border border-zinc-250 dark:border-zinc-700 text-rose-600 dark:text-rose-400 rounded-full text-xs font-bold transition-colors">
+            Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bento Telemetry Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-5 flex flex-col justify-between h-full">
+        <div class="text-[10px] font-bold tracking-[0.15em] uppercase text-zinc-400 dark:text-zinc-500">Cadence</div>
+        <div class="text-xl font-extrabold text-zinc-950 dark:text-zinc-100 font-mono mt-2">Every {{ monitor.interval_minutes }}m</div>
+        <div class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">Sensitivity: <strong class="text-zinc-800 dark:text-zinc-200">{{ monitor.sensitivity|capitalize }}</strong></div>
+      </div>
+    </div>
+
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-5 flex flex-col justify-between h-full">
+        <div class="text-[10px] font-bold tracking-[0.15em] uppercase text-zinc-400 dark:text-zinc-500">Last Checked</div>
+        <div class="text-xl font-extrabold text-zinc-950 dark:text-zinc-100 font-mono mt-2">
+          {% if monitor.last_checked_at %}{{ monitor.last_checked_at.strftime('%H:%M:%S') }}{% else %}None{% endif %}
+        </div>
+        <div class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
+          {% if monitor.last_checked_at %}{{ monitor.last_checked_at.strftime('%Y-%m-%d UTC') }}{% else %}Awaiting run{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-5 flex flex-col justify-between h-full">
+        <div class="text-[10px] font-bold tracking-[0.15em] uppercase text-zinc-400 dark:text-zinc-500">Last Changed</div>
+        <div class="text-xl font-extrabold text-zinc-950 dark:text-zinc-100 font-mono mt-2">
+          {% if monitor.last_changed_at %}{{ monitor.last_changed_at.strftime('%H:%M:%S') }}{% else %}No changes{% endif %}
+        </div>
+        <div class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
+          {% if monitor.last_changed_at %}{{ monitor.last_changed_at.strftime('%Y-%m-%d UTC') }}{% else %}Baseline intact{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-5 flex flex-col justify-between h-full">
+        <div class="text-[10px] font-bold tracking-[0.15em] uppercase text-zinc-400 dark:text-zinc-500">Saved Versions</div>
+        <div class="text-xl font-extrabold text-zinc-950 dark:text-zinc-100 font-mono mt-2">{{ versions|length }}</div>
+        <div class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">Store-on-change</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Numeric Tracking Sparkline / Trend Card (FR-11 Bonus) -->
+  {% if monitor.numeric_selector %}
+  <div class="double-bezel">
+    <div class="double-bezel-inner p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="eyebrow-badge bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60 mb-1">Numeric Trend Analysis</div>
+          <h3 class="text-base font-bold text-zinc-950 dark:text-zinc-100">Tracked Metric: <code class="text-xs bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded font-mono">{{ monitor.numeric_selector }}</code></h3>
+        </div>
+        {% if numeric_observations|length > 0 %}
+        <div class="text-right">
+          <div class="text-2xl font-extrabold font-mono text-zinc-950 dark:text-zinc-100">
+            {{ numeric_observations[-1].unit or '' }}{{ numeric_observations[-1].value }}
+          </div>
+          <div class="text-[11px] text-zinc-400 dark:text-zinc-500 font-mono">Latest recorded value</div>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if numeric_observations|length > 1 %}
+      <!-- SVG Sparkline Trend Chart -->
+      <div class="h-32 w-full bg-zinc-50 dark:bg-zinc-900/60 rounded-xl p-3 border border-zinc-200/60 dark:border-zinc-800 relative flex items-center justify-center">
+        <svg class="w-full h-full overflow-visible" viewBox="0 0 500 100" preserveAspectRatio="none">
+          <!-- Compute sparkline points -->
+          {% set vals = [] %}
+          {% for o in numeric_observations %}
+            {% set _ = vals.append(o.value) %}
+          {% endfor %}
+          {% set min_val = vals|min %}
+          {% set max_val = vals|max %}
+          {% set range_val = (max_val - min_val) if (max_val - min_val) > 0 else 1 %}
+
+          <!-- Polyline connecting points -->
+          <polyline
+            fill="none"
+            stroke="#6366f1"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            points="
+              {% for o in numeric_observations %}
+                {{ (loop.index0 / (numeric_observations|length - 1)) * 500 }},{{ 90 - ((o.value - min_val) / range_val) * 80 }}
+              {% endfor %}
+            "
+          />
+          <!-- Circles for each point -->
+          {% for o in numeric_observations %}
+            <circle
+              cx="{{ (loop.index0 / (numeric_observations|length - 1)) * 500 }}"
+              cy="{{ 90 - ((o.value - min_val) / range_val) * 80 }}"
+              r="4"
+              class="fill-white dark:fill-zinc-900"
+              stroke="#6366f1"
+              stroke-width="2.5"
+            />
+          {% endfor %}
+        </svg>
+      </div>
+      <div class="flex justify-between items-center text-[10px] text-zinc-400 dark:text-zinc-500 font-mono mt-2">
+        <span>Min: {{ min_val }}</span>
+        <span>Samples: {{ numeric_observations|length }}</span>
+        <span>Max: {{ max_val }}</span>
+      </div>
+      {% elif numeric_observations|length == 1 %}
+      <div class="p-6 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800 rounded-xl text-center text-xs text-zinc-500 dark:text-zinc-400 font-mono">
+        First observation recorded: <strong>{{ numeric_observations[0].raw_text }}</strong>. Additional check runs will plot the trendline.
+      </div>
+      {% else %}
+      <div class="p-6 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800 rounded-xl text-center text-xs text-zinc-400 dark:text-zinc-500 font-mono">
+        Awaiting initial run to capture selector <code>{{ monitor.numeric_selector }}</code>.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Active Keyword Rules & Region Filters -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- Watch Selectors -->
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-5 flex flex-col justify-between h-full">
+        <div>
+          <div class="text-[10px] font-bold tracking-[0.15em] uppercase text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Watch Regions
+          </div>
+          {% if monitor.include_selectors|length > 0 %}
+          <div class="flex flex-wrap gap-1.5">
+            {% for s in monitor.include_selectors %}
+            <span class="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 text-[11px] font-mono border border-blue-200/60 dark:border-blue-800/60">{{ s }}</span>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-xs text-zinc-400 dark:text-zinc-500 italic">Entire page body (default)</div>
+          {% endif %}
+        </div>
+        <a href="/monitors/{{ monitor.id }}/regions" class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-bold mt-3 block">&rarr; Adjust in Picker</a>
+      </div>
+    </div>
+
+    <!-- Ignore Selectors -->
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-5 flex flex-col justify-between h-full">
+        <div>
+          <div class="text-[10px] font-bold tracking-[0.15em] uppercase text-rose-600 dark:text-rose-400 mb-2 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Ignored Noise
+          </div>
+          {% if monitor.ignore_selectors|length > 0 %}
+          <div class="flex flex-wrap gap-1.5">
+            {% for s in monitor.ignore_selectors %}
+            <span class="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 text-[11px] font-mono border border-rose-200/60 dark:border-rose-800/60">{{ s }}</span>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-xs text-zinc-400 dark:text-zinc-500 italic">No custom ignored selectors</div>
+          {% endif %}
+        </div>
+        <a href="/monitors/{{ monitor.id }}/regions" class="text-xs text-rose-600 dark:text-rose-400 hover:underline font-bold mt-3 block">&rarr; Suppress Noise</a>
+      </div>
+    </div>
+
+    <!-- Keyword Rules (FR-10) -->
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-5 flex flex-col justify-between h-full">
+        <div>
+          <div class="text-[10px] font-bold tracking-[0.15em] uppercase text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Keyword Triggers
+          </div>
+          {% if monitor.keywords|length > 0 %}
+          <div class="flex flex-wrap gap-1.5">
+            {% for kw in monitor.keywords %}
+            <span class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 text-[11px] font-mono border border-indigo-200/60 dark:border-indigo-800/60 font-semibold">{{ kw }}</span>
+            {% endfor %}
+          </div>
+          <div class="text-[10px] text-zinc-400 dark:text-zinc-500 mt-2 font-mono">Alerts trigger only on keyword matches</div>
+          {% else %}
+          <div class="text-xs text-zinc-400 dark:text-zinc-500 italic">Any meaningful change triggers alerts</div>
+          {% endif %}
+        </div>
+        <a href="/monitors/{{ monitor.id }}/edit" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-bold mt-3 block">&rarr; Edit Keywords</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Version History Timeline -->
+  <div class="double-bezel">
+    <div class="double-bezel-inner p-6 space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+        <div>
+          <h2 class="text-lg font-extrabold text-zinc-950 dark:text-zinc-100 tracking-tight">Version Timeline</h2>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400">Immutable content versions recorded under the store-on-change policy.</p>
+        </div>
+
+        {% if versions|length >= 2 %}
+        <a href="/monitors/{{ monitor.id }}/diff?from={{ versions[1].id }}&to={{ versions[0].id }}" class="btn-island bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 border border-zinc-250 dark:border-zinc-700 text-xs shadow-xs group">
+          <span>Compare Latest vs Previous</span>
+          <div class="btn-island-icon bg-white dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200">
+            &rarr;
+          </div>
+        </a>
+        {% endif %}
+      </div>
+
+      {% if versions|length == 0 %}
+      <div class="p-8 text-center text-xs text-zinc-400 dark:text-zinc-500 font-mono">
+        Zero snapshots recorded. Click <strong>Check Now</strong> to establish baseline version.
+      </div>
+      {% else %}
+      <div class="space-y-3">
+        {% for v in versions %}
+        <div class="p-4 rounded-xl border border-zinc-200/70 dark:border-zinc-800 hover:border-zinc-350 dark:hover:border-zinc-700 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 bg-zinc-50/50 dark:bg-zinc-900/60 hover:bg-white dark:hover:bg-zinc-900 group">
+          <div class="flex items-start gap-3.5">
+            <div class="w-9 h-9 rounded-xl bg-zinc-950 dark:bg-zinc-800 text-white font-mono font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+              v{{ v.version_number }}
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-zinc-950 dark:text-zinc-100 text-sm">
+                  {% if v.reason == 'baseline' %}Initial Baseline{% else %}Content Change Verified{% endif %}
+                </span>
+                <span class="text-[10px] font-mono text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded">SHA-256: {{ v.content_hash[:12] }}</span>
+              </div>
+              <div class="text-xs text-zinc-400 dark:text-zinc-500 font-mono mt-0.5">
+                Captured {{ v.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            {% if loop.index < versions|length %}
+            <a href="/monitors/{{ monitor.id }}/diff?from={{ versions[loop.index].id }}&to={{ v.id }}" class="px-3.5 py-1.5 rounded-lg border border-zinc-250 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors">
+              Compare with previous
+            </a>
+            {% endif %}
+            {% if v.screenshot_artifact_key %}
+            <a href="/artifacts/{{ v.screenshot_artifact_key }}" target="_blank" class="px-3.5 py-1.5 rounded-lg bg-zinc-200/80 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors">
+              Screenshot
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Check Runs Activity Log -->
+  <div class="double-bezel">
+    <div class="double-bezel-inner p-6 space-y-4">
+      <h2 class="text-base font-extrabold text-zinc-950 dark:text-zinc-100 tracking-tight">Recent Check Activity (Last 10 Runs)</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="border-b border-zinc-150 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 uppercase tracking-widest text-[9px] font-mono">
+            <tr>
+              <th class="py-2.5">Timestamp</th>
+              <th class="py-2.5">Status</th>
+              <th class="py-2.5">Duration</th>
+              <th class="py-2.5">HTTP Code</th>
+              <th class="py-2.5">Outcome</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800 font-mono text-zinc-700 dark:text-zinc-300">
+            {% for run in check_runs %}
+            <tr class="hover:bg-zinc-50/60 dark:hover:bg-zinc-900/60 transition-colors">
+              <td class="py-2.5 text-zinc-500 dark:text-zinc-400">{{ run.created_at.strftime('%b %d, %H:%M:%S') }}</td>
+              <td class="py-2.5">
+                {% if run.status == 'ok' %}
+                  <span class="text-emerald-700 dark:text-emerald-400 font-bold font-sans">OK</span>
+                {% elif run.status == 'blocked' %}
+                  <span class="text-purple-700 dark:text-purple-400 font-bold font-sans">Blocked</span>
+                {% elif run.status == 'error' %}
+                  <span class="text-rose-700 dark:text-rose-400 font-bold font-sans">Error</span>
+                {% else %}
+                  <span class="text-zinc-600 dark:text-zinc-400 font-sans">{{ run.status }}</span>
+                {% endif %}
+              </td>
+              <td class="py-2.5 text-zinc-500 dark:text-zinc-400">{{ run.duration_ms }}ms</td>
+              <td class="py-2.5 text-zinc-500 dark:text-zinc-400">{{ run.http_status or '—' }}</td>
+              <td class="py-2.5 font-sans">
+                {% if run.changed %}
+                  <span class="font-bold text-blue-600 dark:text-blue-400">Changed (New version logged)</span>
+                {% elif run.status == 'ok' %}
+                  <span class="text-zinc-400 dark:text-zinc-500">Unchanged</span>
+                {% else %}
+                  <span class="text-rose-600 dark:text-rose-400 font-medium">{{ run.safe_error_message or run.failure_code }}</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

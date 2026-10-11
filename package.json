@@ -1,0 +1,14 @@
+{
+  "name": "changewatch",
+  "version": "1.0.0",
+  "description": "Public web page monitoring service",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "npx @tailwindcss/cli -i ./app/static/css/input.css -o ./app/static/dist/app.css --minify",
+    "watch:css": "npx @tailwindcss/cli -i ./app/static/css/input.css -o ./app/static/dist/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}

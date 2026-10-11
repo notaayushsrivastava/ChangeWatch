@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.env
+changewatch.db
+changewatch.db-wal
+changewatch.db-shm
+data/
+node_modules/*
+dist/
+.DS_Store
+.venv/*
+.agents/*

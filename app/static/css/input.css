@@ -1,0 +1,263 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  body {
+    background-color: #fafafa;
+    color: #09090b;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .dark body {
+    background-color: #09090b;
+    color: #f4f4f5;
+  }
+}
+
+/* =========================================================================
+   Windows PC & Reduced Motion Optimization
+   Optimizes performance and respects Windows "Show animations in Windows: Off"
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .radar-spinner {
+    animation: none !important;
+  }
+}
+
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+.reduced-motion .radar-spinner {
+  animation: none !important;
+}
+
+/* Windows Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(161, 161, 170, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(161, 161, 170, 0.7);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(63, 63, 70, 0.5);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(82, 82, 91, 0.8);
+}
+
+/* =========================================================================
+   Double-Bezel Hardware Architecture (Adaptive Light/Dark)
+   ========================================================================= */
+.double-bezel {
+  background: rgba(244, 244, 245, 0.85);
+  border: 1px solid rgba(228, 228, 231, 0.9);
+  padding: 0.375rem;
+  border-radius: 1.25rem;
+  transition: all 0.3s var(--ease-spring);
+}
+
+.double-bezel-inner {
+  background: #ffffff;
+  border-radius: calc(1.25rem - 0.375rem);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(228, 228, 231, 0.6);
+}
+
+.double-bezel:hover {
+  border-color: rgba(212, 212, 216, 1);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Dark Mode Double-Bezel */
+.dark .double-bezel {
+  background: rgba(24, 24, 27, 0.75);
+  border: 1px solid rgba(39, 39, 42, 0.8);
+}
+
+.dark .double-bezel-inner {
+  background: #0e0e11;
+  border-radius: calc(1.25rem - 0.375rem);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(39, 39, 42, 0.6);
+}
+
+.dark .double-bezel:hover {
+  border-color: rgba(63, 63, 70, 1);
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.45);
+}
+
+/* Dedicated Dark Double-Bezel Container */
+.double-bezel-dark {
+  background: rgba(24, 24, 27, 0.7);
+  border: 1px solid rgba(63, 63, 70, 0.6);
+  padding: 0.375rem;
+  border-radius: 1.5rem;
+  transition: all 0.3s var(--ease-spring);
+}
+
+.double-bezel-dark-inner {
+  background: #09090b;
+  border-radius: calc(1.5rem - 0.375rem);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(39, 39, 42, 0.8);
+}
+
+.double-bezel-dark:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 35px -5px rgba(99, 102, 241, 0.2);
+}
+
+/* =========================================================================
+   Island Buttons & Tags
+   ========================================================================= */
+.btn-island {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.625rem 0.5rem 1.125rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: all 0.25s var(--ease-spring);
+}
+
+.btn-island:active {
+  transform: scale(0.97);
+}
+
+.btn-island-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s var(--ease-spring);
+}
+
+.btn-island:hover .btn-island-icon {
+  transform: translateX(2px) translateY(-1px);
+}
+
+/* Micro Eyebrow Badges */
+.eyebrow-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* Accessible Diff Highlights */
+.diff-add {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border-left: 3px solid #059669;
+}
+
+.dark .diff-add {
+  background-color: rgba(6, 78, 59, 0.35);
+  color: #34d399;
+  border-left: 3px solid #10b981;
+}
+
+.diff-del {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border-left: 3px solid #dc2626;
+  text-decoration: line-through;
+}
+
+.dark .diff-del {
+  background-color: rgba(127, 29, 29, 0.35);
+  color: #f87171;
+  border-left: 3px solid #ef4444;
+  text-decoration: line-through;
+}
+
+.diff-context {
+  background-color: #ffffff;
+  color: #3f3f46;
+}
+
+.dark .diff-context {
+  background-color: #0e0e11;
+  color: #a1a1aa;
+}
+
+/* Ambient Radial Mesh */
+.ambient-mesh {
+  background-image: radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.04) 0px, transparent 50%),
+                    radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.03) 0px, transparent 50%);
+}
+
+.dark .ambient-mesh {
+  background-image: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.09) 0px, transparent 55%),
+                    radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+}
+
+/* Landing Page Ambient Glows */
+.landing-glow {
+  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.04) 40%, transparent 70%);
+}
+
+.dark .landing-glow {
+  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.25) 0%, rgba(139, 92, 246, 0.1) 45%, transparent 75%);
+}
+
+.landing-radial-badge {
+  background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 80%);
+}
+
+/* Konami Code Retro Scanline effect */
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.radar-spinner {
+  animation: radar-sweep 2s linear infinite;
+}
+
+.scanline-overlay {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.06),
+    rgba(0, 255, 0, 0.02),
+    rgba(0, 0, 255, 0.06)
+  );
+  background-size: 100% 4px, 6px 100%;
+}

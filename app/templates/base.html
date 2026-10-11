@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased selection:bg-indigo-600 selection:text-white">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ChangeWatch — Silent Web Intelligence{% endblock %}</title>
+  <link rel="stylesheet" href="/static/dist/app.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      letter-spacing: -0.011em;
+    }
+    code, pre, .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+  <!-- Anti-FOUT Immediate Theme & Motion Detection -->
+  <script>
+    (function() {
+      try {
+        const theme = localStorage.getItem('cw_theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (theme === 'dark' || (!theme && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+        const motion = localStorage.getItem('cw_motion');
+        const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (motion === 'reduced' || (!motion && prefersReduced)) {
+          document.documentElement.classList.add('reduced-motion');
+        } else {
+          document.documentElement.classList.remove('reduced-motion');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="h-full flex flex-col md:flex-row min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
+
+  {% if current_user %}
+  <!-- Desktop & Tablet Sidebar Navigation -->
+  <aside class="w-full md:w-64 bg-zinc-950 text-zinc-300 flex flex-col justify-between shrink-0 border-r border-zinc-800/80 shadow-xl z-20">
+    <div>
+      <!-- Brand & Status Pill -->
+      <div class="h-18 flex items-center justify-between px-6 border-b border-zinc-850">
+        <a href="/dashboard" class="flex items-center gap-3 font-extrabold text-white text-base tracking-tight group">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] group-hover:scale-105 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          </div>
+          <span class="bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent font-bold text-base tracking-tight">ChangeWatch</span>
+        </a>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="p-4 space-y-1.5">
+        <div class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Workspace</div>
+        <a href="/dashboard" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 {% if request.url.path == '/dashboard' or request.url.path == '/' %}bg-zinc-850/90 text-white shadow-xs border border-zinc-700/40{% else %}text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100{% endif %}">
+          <span class="flex items-center gap-3">
+            <svg class="w-4 h-4 {% if request.url.path == '/dashboard' or request.url.path == '/' %}text-blue-400{% else %}text-zinc-500{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            Dashboard
+          </span>
+          <span class="w-1.5 h-1.5 rounded-full {% if request.url.path == '/dashboard' or request.url.path == '/' %}bg-blue-400{% else %}bg-transparent{% endif %}"></span>
+        </a>
+
+        <a href="/monitors/new" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 {% if request.url.path == '/monitors/new' %}bg-zinc-850/90 text-white shadow-xs border border-zinc-700/40{% else %}text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100{% endif %}">
+          <span class="flex items-center gap-3">
+            <svg class="w-4 h-4 {% if request.url.path == '/monitors/new' %}text-blue-400{% else %}text-zinc-500{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Monitor
+          </span>
+        </a>
+
+        <div class="px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Configuration</div>
+        <a href="/settings/notifications" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 {% if request.url.path == '/settings/notifications' %}bg-zinc-850/90 text-white shadow-xs border border-zinc-700/40{% else %}text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100{% endif %}">
+          <span class="flex items-center gap-3">
+            <svg class="w-4 h-4 {% if request.url.path == '/settings/notifications' %}text-blue-400{% else %}text-zinc-500{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            Alert Channels
+          </span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Preferences & User Profile Dock -->
+    <div class="p-3 m-3 space-y-2">
+      <!-- Dark Mode & Windows Motion Switcher -->
+      <div class="p-2 bg-zinc-900/80 rounded-xl border border-zinc-800/80 flex items-center justify-between text-xs">
+        <button type="button" onclick="toggleTheme()" class="flex items-center gap-2 text-zinc-300 hover:text-white px-2 py-1 rounded-lg hover:bg-zinc-800 transition-colors text-[11px] font-semibold" title="Toggle Light / Dark Mode">
+          <svg class="theme-icon-sun w-3.5 h-3.5 text-amber-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <svg class="theme-icon-moon w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          <span class="theme-label">Theme</span>
+        </button>
+
+        <button type="button" onclick="toggleMotion()" class="flex items-center gap-1.5 text-zinc-400 hover:text-white px-2 py-1 rounded-lg hover:bg-zinc-800 transition-colors text-[11px] font-mono" title="Optimize for Windows: Toggle animations">
+          <span class="motion-indicator w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span class="motion-label text-[10px]">Motion</span>
+        </button>
+      </div>
+
+      <!-- User Profile & Sign Out -->
+      <div class="p-2.5 bg-zinc-900/60 rounded-xl border border-zinc-800/60 backdrop-blur-md flex items-center justify-between">
+        <div class="truncate pr-2">
+          <div class="text-[11px] font-semibold text-zinc-200 truncate">{{ current_user.email }}</div>
+          <div class="text-[10px] text-zinc-500 font-mono">{{ current_user.timezone }}</div>
+        </div>
+        <form action="/auth/logout" method="POST" class="shrink-0">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" title="Sign out" class="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </aside>
+  {% else %}
+  <!-- Floating Guest Preferences Toggle Pill -->
+  <div class="fixed top-4 right-4 z-50 flex items-center gap-1 p-1 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md rounded-full border border-zinc-200/80 dark:border-zinc-800 shadow-md">
+    <button type="button" onclick="toggleTheme()" class="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition-colors" title="Toggle Light / Dark Mode">
+      <svg class="theme-icon-sun w-4 h-4 text-amber-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      <svg class="theme-icon-moon w-4 h-4 text-zinc-600 dark:text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+    </button>
+    <button type="button" onclick="toggleMotion()" class="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition-colors flex items-center gap-1 font-mono text-[10px]" title="Toggle Animation Effects (Windows PC Optimization)">
+      <span class="motion-indicator w-2 h-2 rounded-full bg-emerald-400"></span>
+    </button>
+  </div>
+  {% endif %}
+
+  <!-- Main Viewport -->
+  <main class="flex-1 flex flex-col min-w-0 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 overflow-y-auto ambient-mesh">
+    <!-- Flash Messages / Notifications -->
+    {% if message %}
+    <div class="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-blue-50/80 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/80 text-blue-900 dark:text-blue-200 text-xs font-medium flex items-center justify-between shadow-xs">
+      <span class="flex items-center gap-2">
+        <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        {{ message }}
+      </span>
+    </div>
+    {% endif %}
+    {% if error %}
+    <div class="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-rose-50/80 dark:bg-rose-950/60 border border-rose-200/80 dark:border-rose-800/80 text-rose-900 dark:text-rose-200 text-xs font-medium flex items-center justify-between shadow-xs">
+      <span class="flex items-center gap-2">
+        <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        {{ error }}
+      </span>
+    </div>
+    {% endif %}
+
+    <div class="flex-1 p-6 md:p-10 max-w-7xl w-full mx-auto">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <!-- Konami Code Easter Egg HUD Overlay -->
+  <div id="konami-overlay" class="hidden fixed inset-0 z-50 pointer-events-none flex flex-col items-center justify-center scanline-overlay bg-black/90 text-emerald-400 font-mono">
+    <div class="p-8 rounded-2xl border-2 border-emerald-500 bg-black/95 shadow-[0_0_60px_rgba(16,185,129,0.4)] text-center max-w-lg pointer-events-auto">
+      <div class="w-16 h-16 mx-auto mb-4 border-2 border-emerald-400 rounded-full flex items-center justify-center relative">
+        <div class="absolute inset-0 border-t-2 border-emerald-300 rounded-full radar-spinner"></div>
+        <span class="text-2xl">📡</span>
+      </div>
+      <h2 class="text-2xl font-bold tracking-widest uppercase mb-2 text-emerald-300">TURBO RADAR ACTIVE</h2>
+      <p class="text-xs text-emerald-400/80 mb-6 font-mono">KONAMI CODE VERIFIED. ALL TARGETS SCANNING AT ZERO DELAY.</p>
+      <div class="inline-block px-3 py-1 bg-emerald-950/80 border border-emerald-400/40 rounded text-[11px] tracking-wider mb-6">
+        FREQUENCY: 100% OPERATIONAL
+      </div>
+      <div>
+        <button onclick="document.getElementById('konami-overlay').classList.add('hidden')" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold rounded-lg text-xs uppercase tracking-wider transition-colors shadow-lg shadow-emerald-500/20">
+          Dismiss Override
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
