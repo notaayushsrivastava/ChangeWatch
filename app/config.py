@@ -48,6 +48,12 @@ class Settings(BaseSettings):
     BROWSER_WORKER_TOKEN: str = ""
     BROWSER_WORKER_TIMEOUT_SECONDS: int = 45
 
+    # Optional managed Browserbase CDP backend. The Vercel Marketplace integration
+    # can provide the API key; keep the project ID scoped to this app.
+    BROWSERBASE_API_KEY: str = ""
+    BROWSERBASE_PROJECT_ID: str = ""
+    BROWSERBASE_SESSION_TIMEOUT_SECONDS: int = 120
+
     EMAIL_PROVIDER: str = "console"  # console, smtp, resend
     EMAIL_FROM: str = "alerts@changewatch.local"
     SMTP_HOST: str = "localhost"
@@ -117,12 +123,19 @@ class Settings(BaseSettings):
             problems.append("APP_BASE_URL must be the public HTTPS application URL")
         if self.is_vercel:
             worker_url = self.BROWSER_WORKER_URL.strip()
-            if not worker_url:
-                problems.append("Configure BROWSER_WORKER_URL to enable Chromium-based region preview and remote browser capture")
-            elif not worker_url.startswith("https://"):
+            custom_worker_configured = bool(worker_url and len(self.BROWSER_WORKER_TOKEN) >= 32)
+            browserbase_configured = bool(
+                self.BROWSERBASE_API_KEY.strip() and self.BROWSERBASE_PROJECT_ID.strip()
+            )
+            if worker_url and not worker_url.startswith("https://"):
                 problems.append("BROWSER_WORKER_URL must be an HTTPS URL in Vercel")
-            if len(self.BROWSER_WORKER_TOKEN) < 32:
+            if worker_url and len(self.BROWSER_WORKER_TOKEN) < 32:
                 problems.append("BROWSER_WORKER_TOKEN must be a unique random secret of at least 32 characters")
+            if not custom_worker_configured and not browserbase_configured:
+                problems.append(
+                    "Configure either BROWSER_WORKER_URL plus BROWSER_WORKER_TOKEN, "
+                    "or BROWSERBASE_API_KEY plus BROWSERBASE_PROJECT_ID, for remote Chromium"
+                )
         if problems:
             raise RuntimeError("Invalid production configuration: " + "; ".join(problems))
 
