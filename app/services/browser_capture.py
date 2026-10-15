@@ -439,8 +439,8 @@ class BrowserCaptureService:
                 success=False,
                 failure_code="BROWSER_WORKER_UNCONFIGURED",
                 error_message=(
-                    "Remote Chromium is not configured. Set BROWSER_WORKER_URL and "
-                    "the same random BROWSER_WORKER_TOKEN on Vercel and the browser-worker service."
+                    "Remote Chromium is not configured. Set BROWSERBASE_API_KEY and "
+                    "BROWSERBASE_PROJECT_ID, or configure BROWSER_WORKER_URL and BROWSER_WORKER_TOKEN."
                 ),
                 duration_ms=int((time.time() - start_time) * 1000),
             )
