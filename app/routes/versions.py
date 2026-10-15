@@ -59,9 +59,9 @@ async def version_diff_page(
     diff_artifact_key = None
     if from_version.screenshot_artifact_key and to_version.screenshot_artifact_key:
         expected_diff_filename = f"diff_{monitor.id}_{from_version.id}_{to_version.id}.png"
-        existing_path = artifact_storage.get_artifact_path(expected_diff_filename)
+        existing_artifact = artifact_storage.exists(expected_diff_filename)
 
-        if existing_path:
+        if existing_artifact:
             diff_artifact_key = expected_diff_filename
         else:
             # Generate visual diff
