@@ -95,7 +95,8 @@ The FastAPI/Jinja web application can run as a Vercel Python function. Vercel is
    - `ENCRYPTION_KEY` (a freshly generated Fernet key)
    - production email provider settings if outbound mail alerts are required
 4. Apply reviewed, versioned Alembic migrations before using database-backed features. The guarded GitHub workflow requires a repository Actions secret named `NEON_DATABASE_URL` containing the Neon **unpooled** connection string; then run **Actions → Migrate Neon database** and explicitly select `migrate`. It refuses to baseline an existing unversioned schema. If the Neon database may already contain tables, inspect them first.
-5. Deploy a preview and verify login, DB connectivity, CSS and routes before promoting it to production.
+5. For emergency recovery only, `MIGRATE_DATABASE_ON_STARTUP=true` plus `MIGRATION_DATABASE_URL` can temporarily apply pending Alembic revisions using a direct/unpooled PostgreSQL connection. This setting is off by default, refuses an unversioned non-empty schema, and serializes concurrent startup attempts. Disable it immediately after recovery; prefer the guarded GitHub workflow for routine deployments.
+6. Deploy a preview and verify sign-up, sign-in, DB connectivity, CSS and routes before promoting it to production.
 
 The region-picker endpoint that directly invokes Chromium returns an explicit 503 on Vercel until a remote browser-worker endpoint is wired in. The normal monitor create/check-now actions enqueue jobs; a persistent worker must be running to process them.
 
