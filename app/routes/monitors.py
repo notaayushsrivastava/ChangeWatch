@@ -1,4 +1,6 @@
+import html as html_lib
 import json
+from datetime import datetime, timezone
 import re
 from typing import Optional
 from fastapi import APIRouter, Request, Depends, Form, HTTPException, status
@@ -6,6 +8,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.db import get_db
+from app.config import settings
 from app.models.user import User
 from app.models.monitor import Monitor
 from app.models.version import Version
@@ -94,12 +97,12 @@ async def create_monitor_action(
 
     # Enqueue initial baseline check
     job = enqueue_check(db, monitor.id, is_manual=True)
-    if job:
-        # Process baseline check immediately
-        try:
-            await process_check_job(db, job)
-        except Exception:
-            pass
+    if job and (settings.run_inline_checks or settings.is_vercel):
+        # Vercel has no resident queue worker. Execute the initial job in this
+        # request so it immediately transitions to Running/OK/Error rather than
+        # remaining Pending forever. The remote-browser backend is still required
+        # for a successful Chromium capture.
+        await process_check_job(db, job)
 
     return RedirectResponse(url=f"/monitors/{monitor.id}", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -227,7 +230,11 @@ async def check_now_action(
         raise HTTPException(status_code=404, detail="Monitor not found")
 
     job = enqueue_check(db, monitor.id, is_manual=True)
-    if job:
+    if job and job.status == "pending" and (settings.run_inline_checks or settings.is_vercel):
+        # A manual request may run a waiting job immediately, but must never race
+        # a job that another worker has already claimed.
+        job.scheduled_at = datetime.now(timezone.utc)
+        db.commit()
         await process_check_job(db, job)
 
     return RedirectResponse(url=f"/monitors/{monitor.id}", status_code=status.HTTP_303_SEE_OTHER)
@@ -357,19 +364,33 @@ async def preview_dom_endpoint(
     if not monitor:
         raise HTTPException(status_code=404, detail="Monitor not found")
 
-    # Fetch live page snapshot
+    # Vercel functions do not ship Chromium. browser_capture_service forwards
+    # this request to the configured authenticated worker; local development can
+    # continue to launch Chromium directly.
     capture = await browser_capture_service.capture_page(
         url=monitor.url,
-        capture_dom=True
+        capture_dom=True,
     )
 
     if not capture.success:
-        return HTMLResponse(f"""
-            <html><body style="font-family:sans-serif;padding:2rem;color:#e11d48;background:#fff1f2;">
-            <h3>Unable to load preview</h3>
-            <p>{capture.error_message or capture.failure_code}</p>
-            </body></html>
-        """, status_code=200)
+        if capture.failure_code == "BROWSER_WORKER_UNCONFIGURED":
+            error_status = 503
+            error_message = (
+                "Remote Chromium is not configured for this deployment. "
+                "Install Browserbase and set BROWSERBASE_API_KEY plus BROWSERBASE_PROJECT_ID, "
+                "or configure BROWSER_WORKER_URL plus BROWSER_WORKER_TOKEN in Vercel."
+            )
+        else:
+            error_status = 502
+            error_message = capture.error_message or capture.failure_code or "Unknown capture error"
+        safe_error = html_lib.escape(error_message)
+        return HTMLResponse(
+            "<html><body style='font-family:sans-serif;padding:2rem;color:#e11d48;background:#fff1f2;'>"
+            "<h3>Unable to load preview</h3>"
+            f"<p>{safe_error}</p>"
+            "</body></html>",
+            status_code=error_status,
+        )
 
     html = capture.dom_html or "<html><body>Empty page</body></html>"
 

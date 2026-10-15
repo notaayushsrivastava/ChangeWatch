@@ -1,0 +1,73 @@
+name: ChangeWatch monitor scheduler
+
+on:
+  schedule:
+    # GitHub Actions runs the Vercel-compatible queue tick every five minutes.
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: changewatch-monitor-scheduler
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Drain a bounded batch of due monitor jobs
+        env:
+          APP_URL: ${{ vars.CHANGEWATCH_APP_URL }}
+          CRON_SECRET: ${{ secrets.CHANGEWATCH_CRON_SECRET }}
+        shell: bash
+        run: |
+          if [[ -z "$APP_URL" || -z "$CRON_SECRET" ]]; then
+            echo "::warning::Set repository variable CHANGEWATCH_APP_URL and repository Actions secret CHANGEWATCH_CRON_SECRET; this scheduled tick was skipped."
+            exit 0
+          fi
+
+          if [[ ! "$APP_URL" =~ ^https:// ]]; then
+            echo "::error::CHANGEWATCH_APP_URL must be the public HTTPS origin of the deployed app."
+            exit 1
+          fi
+
+          # Keep each Chromium capture in its own Vercel request so one slow page
+          # can't consume the remaining execution budget for an entire batch.
+          max_ticks=5
+          for ((tick=1; tick<=max_ticks; tick++)); do
+            response_file="$(mktemp)"
+            status="$(curl --silent --show-error --max-time 65 --retry 1 --retry-delay 2 \
+              --output "$response_file" --write-out '%{http_code}' \
+              --header "Authorization: Bearer ${CRON_SECRET}" \
+              "${APP_URL%/}/internal/worker/tick")"
+            cat "$response_file"
+
+            if [[ ! "$status" =~ ^2[0-9][0-9]$ ]]; then
+              rm -f "$response_file"
+              echo "::error::Scheduler endpoint returned HTTP $status."
+              exit 1
+            fi
+
+            processed="$(python - "$response_file" <<'PY'
+          import json, sys
+          try:
+              with open(sys.argv[1], encoding="utf-8") as f:
+                  payload = json.load(f)
+              print("true" if payload.get("processed") else "false")
+          except Exception:
+              print("invalid")
+          PY
+            )"
+            rm -f "$response_file"
+
+            if [[ "$processed" == "false" ]]; then
+              echo "No further due jobs; drained $((tick - 1)) job(s) this run."
+              break
+            elif [[ "$processed" != "true" ]]; then
+              echo "::error::Scheduler endpoint returned an unexpected JSON response."
+              exit 1
+            fi
+          done
