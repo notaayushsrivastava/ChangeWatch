@@ -35,7 +35,7 @@ class ArtifactStorage:
 
     @staticmethod
     def _validate_filename(filename: str) -> bool:
-        return bool(filename) and filename not in {".", ".."} and "/" not in filename and "\\\\" not in filename and ".." not in filename
+        return bool(filename) and filename not in {".", ".."} and "/" not in filename and "\\" not in filename and ".." not in filename
 
     def _key(self, filename: str) -> str:
         prefix = settings.S3_PREFIX.strip("/")
