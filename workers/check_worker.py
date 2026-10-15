@@ -36,6 +36,8 @@ async def run_worker(poll_interval_seconds: float = 2.0):
                 )
                 if job:
                     job_id = job.id
+                    job.status = "running"
+                    job.locked_at = now
                     job.locked_by = worker_id
                     db.commit()
                     logger.info(
