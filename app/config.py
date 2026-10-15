@@ -54,7 +54,11 @@ class Settings(BaseSettings):
 
     @property
     def is_production(self) -> bool:
-        return self.APP_ENV.lower() == "production"
+        # Vercel exposes VERCEL_ENV=production on production deployments.
+        # Keep previews usable before their database/object-store services exist.
+        return self.APP_ENV.lower() == "production" or (
+            self.is_vercel and os.getenv("VERCEL_ENV", "").lower() == "production"
+        )
 
     @property
     def run_inline_checks(self) -> bool:
