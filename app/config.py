@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     APP_BASE_URL: str = "http://localhost:8000"
 
     DATABASE_URL: str = "sqlite:///./changewatch.db"
+    # Explicit, temporary escape hatch for one-off Alembic migrations during recovery.
+    # Keep disabled normally; migrations should be run by the guarded migration workflow.
+    MIGRATE_DATABASE_ON_STARTUP: bool = False
+    MIGRATION_DATABASE_URL: str = ""
     QUEUE_TYPE: str = "database"  # database or redis
     REDIS_URL: str = "redis://localhost:6379/0"
 
@@ -49,7 +53,7 @@ class Settings(BaseSettings):
     ENCRYPTION_KEY: str = "dGhpc2lzYXZlcnlzZWNyZXRrZXkxMjM0NTY3ODkwMTI="
     LOG_LEVEL: str = "INFO"
 
-    @field_validator("DATABASE_URL", mode="before")
+    @field_validator("DATABASE_URL", "MIGRATION_DATABASE_URL", mode="before")
     @classmethod
     def normalize_postgres_url(cls, value: object) -> object:
         """Use psycopg 3 for Neon/Postgres URLs while preserving query parameters."""
