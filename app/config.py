@@ -68,12 +68,21 @@ class Settings(BaseSettings):
     def validate_production_config(self) -> None:
         """Fail closed instead of using development secrets or ephemeral storage in production."""
         problems = []
-        if len(self.APP_SECRET_KEY) < 32 or self.APP_SECRET_KEY.startswith("changewatch-dev-"):
+        if (
+            len(self.APP_SECRET_KEY) < 32
+            or self.APP_SECRET_KEY.startswith("changewatch-dev-")
+            or self.APP_SECRET_KEY.startswith("change-me-")
+        ):
             problems.append("APP_SECRET_KEY must be a unique random secret of at least 32 characters")
-        if self.ENCRYPTION_KEY == "dGhpc2lzYXZlcnlzZWNyZXRrZXkxMjM0NTY3ODkwMTI=":
-            problems.append("ENCRYPTION_KEY must be generated specifically for this deployment")
-        if self.DATABASE_URL.lower().startswith("sqlite"):
-            problems.append("DATABASE_URL must point to PostgreSQL in production")
+        try:
+            from cryptography.fernet import Fernet
+            Fernet(self.ENCRYPTION_KEY.encode("utf-8"))
+            if self.ENCRYPTION_KEY == "dGhpc2lzYXZlcnlzZWNyZXRrZXkxMjM0NTY3ODkwMTI=":
+                problems.append("ENCRYPTION_KEY must be generated specifically for this deployment")
+        except Exception:
+            problems.append("ENCRYPTION_KEY must be a valid, unique Fernet key")
+        if not self.DATABASE_URL.lower().startswith("postgresql+psycopg://"):
+            problems.append("DATABASE_URL must use managed PostgreSQL with the psycopg driver")
         if self.artifact_backend != "s3" or not self.S3_BUCKET.strip():
             problems.append("Set ARTIFACT_STORAGE_BACKEND=s3 and configure S3_BUCKET for durable artifacts")
         if self.APP_BASE_URL.startswith("http://localhost"):
