@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     MIGRATION_DATABASE_URL: str = ""
     QUEUE_TYPE: str = "database"  # database or redis
     REDIS_URL: str = "redis://localhost:6379/0"
+    # Shared secret for the protected Vercel/GitHub Actions scheduler tick endpoint.
+    CRON_SECRET: str = ""
 
     ARTIFACT_STORAGE_DIR: str = "./data/artifacts"
     ARTIFACT_STORAGE_BACKEND: str | None = None  # local or s3; defaults to s3 on Vercel
