@@ -373,8 +373,8 @@ async def preview_dom_endpoint(
             error_status = 503
             error_message = (
                 "Remote Chromium is not configured for this deployment. "
-                "Deploy the browser-worker container and set BROWSER_WORKER_URL "
-                "and BROWSER_WORKER_TOKEN in Vercel."
+                "Install Browserbase and set BROWSERBASE_API_KEY plus BROWSERBASE_PROJECT_ID, "
+                "or configure BROWSER_WORKER_URL plus BROWSER_WORKER_TOKEN in Vercel."
             )
         else:
             error_status = 502
