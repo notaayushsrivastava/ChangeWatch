@@ -107,6 +107,11 @@ async def _process_check_job_impl(db: Session, job: QueueJob, allow_test_fixture
         monitor.last_error_message = result.error_message
         monitor.last_checked_at = datetime.now(timezone.utc)
 
+        # Even permanent capture/configuration failures should receive a next-check
+        # timestamp so the scheduler doesn't enqueue a fresh job every tick.
+        now_failed = datetime.now(timezone.utc)
+        monitor.next_check_at = now_failed + timedelta(minutes=max(15, monitor.interval_minutes))
+
         # Configuration/authentication failures won't heal with retries. Other
         # capture failures receive bounded exponential backoff instead of a hot loop.
         terminal_failures = {
@@ -114,7 +119,6 @@ async def _process_check_job_impl(db: Session, job: QueueJob, allow_test_fixture
             "BROWSER_WORKER_AUTH_FAILED",
         }
         can_retry = job.attempts < job.max_attempts and result.failure_code not in terminal_failures
-        now_failed = datetime.now(timezone.utc)
         if can_retry:
             job.status = "pending"
             job.scheduled_at = now_failed + timedelta(seconds=min(300, 5 * (2 ** (job.attempts - 1))))
