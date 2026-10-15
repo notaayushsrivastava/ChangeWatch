@@ -1,5 +1,6 @@
 import html as html_lib
 import json
+from datetime import datetime, timezone
 import re
 from typing import Optional
 from fastapi import APIRouter, Request, Depends, Form, HTTPException, status
@@ -232,7 +233,7 @@ async def check_now_action(
     if job and job.status == "pending" and (settings.run_inline_checks or settings.is_vercel):
         # A manual request may run a waiting job immediately, but must never race
         # a job that another worker has already claimed.
-        job.scheduled_at = __import__("datetime").datetime.now(__import__("datetime").timezone.utc)
+        job.scheduled_at = datetime.now(timezone.utc)
         db.commit()
         await process_check_job(db, job)
 
