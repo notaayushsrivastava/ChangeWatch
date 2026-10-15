@@ -24,3 +24,15 @@ def test_sqlite_url_is_unchanged():
     settings = Settings(DATABASE_URL="sqlite:///./changewatch.db")
 
     assert settings.DATABASE_URL == "sqlite:///./changewatch.db"
+
+
+def test_migration_neon_url_is_normalized_for_psycopg():
+    settings = Settings(
+        MIGRATION_DATABASE_URL=(
+            "postgresql://neondb_owner:example@ep-example."
+            "ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+        )
+    )
+
+    assert settings.MIGRATION_DATABASE_URL.startswith("postgresql+psycopg://")
+    assert "sslmode=require" in settings.MIGRATION_DATABASE_URL
