@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="cw-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#4f46e5" />
+    </linearGradient>
+  </defs>
+  <!-- Background Squircle -->
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="url(#cw-grad)" />
+  <rect x="4.5" y="4.5" width="55" height="55" rx="13.5" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
+  <!-- Eye / Radar Contour -->
+  <path d="M13 32C16.8 22.8 24.2 17.5 32 17.5C39.8 17.5 47.2 22.8 51 32C47.2 41.2 39.8 46.5 32 46.5C24.2 46.5 16.8 41.2 13 32Z" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Iris Circle -->
+  <circle cx="32" cy="32" r="6.5" stroke="#ffffff" stroke-width="3.5" fill="#38bdf8" />
+  <!-- Specular glint -->
+  <circle cx="34.5" cy="29.5" r="1.8" fill="#ffffff" />
+</svg>

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Terms of Service — ChangeWatch{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-10 pb-16">
+
+  <!-- Header -->
+  <div class="pb-6 border-b border-zinc-200/80 dark:border-zinc-800">
+    <div class="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500 mb-2 font-mono">
+      <a href="/" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">ChangeWatch</a>
+      <span>/</span>
+      <span class="text-zinc-700 dark:text-zinc-300">Legal</span>
+    </div>
+    <div class="eyebrow-badge bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-300 mb-3">SERVICE AGREEMENT</div>
+    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-zinc-950 dark:text-zinc-50">Terms of Service</h1>
+    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-2 font-mono">Last updated: October 2026 • Effective Date: October 15, 2026</p>
+  </div>
+
+  <div class="double-bezel">
+    <div class="double-bezel-inner p-6 sm:p-10 space-y-8 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+
+      <!-- Section 1 -->
+      <section class="space-y-3">
+        <h2 class="text-base font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">1. Agreement &amp; Scope</h2>
+        <p>
+          By creating an account or accessing ChangeWatch ("the Service"), operated by <strong>Aayush Srivastava</strong>, you agree to be bound by these Terms of Service. If you do not agree to these terms, do not access or use the Service.
+        </p>
+      </section>
+
+      <!-- Section 2 -->
+      <section class="space-y-3">
+        <h2 class="text-base font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">2. Acceptable Use Policy</h2>
+        <p>
+          ChangeWatch is designed for tracking publicly available web pages. You agree to use the Service strictly in compliance with applicable laws and the following conditions:
+        </p>
+        <ul class="list-disc pl-5 space-y-2 text-zinc-700 dark:text-zinc-200">
+          <li><strong>Public Resources Only:</strong> You may only configure monitors for publicly accessible web pages. You agree not to attempt to circumvent authentication walls, access paywalled content unlawfully, or bypass technical protection measures.</li>
+          <li><strong>Respect for Target Hosts:</strong> You agree not to configure excessively frequent monitoring intervals with the intent or effect of degrading target server performance or launching denial-of-service (DoS) attacks.</li>
+          <li><strong>No Abusive Automation:</strong> You may not use automated scripts to abuse, brute-force, or exploit the ChangeWatch web application, API endpoints, or scheduler.</li>
+        </ul>
+      </section>
+
+      <!-- Section 3 -->
+      <section class="space-y-3">
+        <h2 class="text-base font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">3. Strict SSRF Prohibition</h2>
+        <p>
+          ChangeWatch employs automated defenses against Server-Side Request Forgery. Attempting to probe, scan, or query internal networks, RFC 1918 private IP spaces (<code class="font-mono text-zinc-900 dark:text-zinc-100">10.0.0.0/8</code>, <code class="font-mono text-zinc-900 dark:text-zinc-100">172.16.0.0/12</code>, <code class="font-mono text-zinc-900 dark:text-zinc-100">192.168.0.0/16</code>), loopbacks, link-local addresses, or cloud metadata endpoints (<code class="font-mono text-zinc-900 dark:text-zinc-100">169.254.169.254</code>) is strictly prohibited and constitutes an immediate violation of these terms resulting in permanent account termination.
+        </p>
+      </section>
+
+      <!-- Section 4 -->
+      <section class="space-y-3">
+        <h2 class="text-base font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">4. Service Availability &amp; Scheduling</h2>
+        <p>
+          Monitoring execution is provided on a best-effort basis. Checks are scheduled with deliberate jitter to distribute server load. Because external websites can implement bot protections (Cloudflare, CAPTCHAs, geoblocking), ChangeWatch does not warrant that every target web page can be rendered or captured continuously without obstruction.
+        </p>
+      </section>
+
+      <!-- Section 5 -->
+      <section class="space-y-3">
+        <h2 class="text-base font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">5. Limitation of Liability</h2>
+        <p>
+          In no event shall Aayush Srivastava, ChangeWatch, or its contributors be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use the Service, including missed change notifications, delayed alerts, or false-negative diffs.
+        </p>
+      </section>
+
+      <!-- Section 6 -->
+      <section class="space-y-3">
+        <h2 class="text-base font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">6. Contact &amp; Questions</h2>
+        <p>
+          For legal inquiries, dispute resolution, or notices under these Terms, please contact:
+        </p>
+        <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono text-xs space-y-1">
+          <div class="font-bold text-zinc-900 dark:text-zinc-100">Aayush Srivastava</div>
+          <div class="text-zinc-500 dark:text-zinc-400">Creator &amp; Maintainer, ChangeWatch</div>
+          <div class="text-blue-600 dark:text-blue-400">Email: <a href="mailto:aayush@aayushsrivastava.com" class="hover:underline">aayush@aayushsrivastava.com</a></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

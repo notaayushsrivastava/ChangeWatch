@@ -6,6 +6,10 @@
 <div class="min-h-[75vh] flex flex-col justify-center items-center">
   <div class="double-bezel w-full max-w-md">
     <div class="double-bezel-inner p-8 md:p-10">
+      <a href="/dashboard" class="inline-flex items-center gap-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg mb-6">
+        <span aria-hidden="true">&larr;</span>
+        Back to dashboard
+      </a>
       <div class="mb-8 text-center">
         <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/25">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
@@ -20,12 +24,12 @@
 
         <div>
           <label for="email" class="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">Email address</label>
-          <input type="email" id="email" name="email" required autocomplete="email" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600" placeholder="you@domain.com">
+          <input type="email" id="email" name="email" required autocomplete="email" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-400" placeholder="you@domain.com">
         </div>
 
         <div>
           <label for="password" class="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">Password</label>
-          <input type="password" id="password" name="password" minlength="8" required autocomplete="new-password" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600" placeholder="Minimum 8 characters">
+          <input type="password" id="password" name="password" minlength="8" required autocomplete="new-password" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-400" placeholder="Minimum 8 characters">
         </div>
 
         <div>
@@ -48,7 +52,7 @@
         </button>
       </form>
 
-      <div class="mt-8 text-center text-xs text-zinc-400 dark:text-zinc-500 border-t border-zinc-150 dark:border-zinc-800 pt-5">
+      <div class="mt-8 text-center text-xs text-zinc-600 dark:text-zinc-300 border-t border-zinc-200 dark:border-zinc-800 pt-5">
         Already registered? <a href="/auth/login" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 font-bold">Sign in</a>
       </div>
     </div>

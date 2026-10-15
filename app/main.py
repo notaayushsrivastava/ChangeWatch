@@ -19,7 +19,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from app.config import settings
 from app.db import engine, Base
-from app.routes import auth, dashboard, monitors, versions, settings as settings_routes, worker_tick
+from app.routes import auth, dashboard, monitors, versions, settings as settings_routes, worker_tick, pages
 from app.services.scheduler_service import scheduler_loop
 
 # Keep schema bootstrap out of production/serverless imports. Run
@@ -74,6 +74,8 @@ app = FastAPI(
     title="ChangeWatch",
     description="Public web page monitoring service with noise filtering and visual diffs",
     version="1.0.0",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
     lifespan=lifespan,
 )
 
@@ -98,6 +100,7 @@ app.include_router(monitors.router)
 app.include_router(versions.router)
 app.include_router(settings_routes.router)
 app.include_router(worker_tick.router)
+app.include_router(pages.router)
 
 templates = Jinja2Templates(directory="app/templates")
 

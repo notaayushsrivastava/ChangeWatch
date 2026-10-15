@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}Documentation — ChangeWatch Architecture & Features{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-12 pb-16">
+
+  <!-- Breadcrumb & Header -->
+  <div class="pb-6 border-b border-zinc-200/80 dark:border-zinc-800">
+    <div class="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500 mb-2 font-mono">
+      <a href="/" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">ChangeWatch</a>
+      <span>/</span>
+      <span class="text-zinc-700 dark:text-zinc-300">Technical Documentation</span>
+    </div>
+    <div class="eyebrow-badge bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60 mb-3">SYSTEM SPECIFICATION</div>
+    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-zinc-950 dark:text-zinc-50">
+      Architecture &amp; Features Guide
+    </h1>
+    <p class="text-sm sm:text-base text-zinc-600 dark:text-zinc-300 mt-3 max-w-3xl leading-relaxed">
+      Complete reference explaining how ChangeWatch captures web pages, neutralizes noise, protects against SSRF attacks, executes diffing, and operates across local, containerized, and Vercel serverless cloud runtimes.
+    </p>
+
+    <!-- Navigation Anchors -->
+    <div class="flex flex-wrap gap-2 mt-6 pt-4 border-t border-zinc-150 dark:border-zinc-850 font-mono text-xs">
+      <a href="#overview" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">#overview</a>
+      <a href="#pipeline" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">#normalization</a>
+      <a href="#regions" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">#visual-regions</a>
+      <a href="#diff-studio" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">#diff-engine</a>
+      <a href="#numeric-keywords" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">#numeric-tracking</a>
+      <a href="#security" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">#ssrf-defense</a>
+      <a href="#vercel" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">#vercel-serverless</a>
+      <a href="#storage" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">#storage-db</a>
+    </div>
+  </div>
+
+  <!-- Section 1: Overview & Mission -->
+  <section id="overview" class="space-y-4">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+      <h2 class="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">1. Why ChangeWatch?</h2>
+    </div>
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-6 sm:p-8 space-y-4 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+        <p>
+          Standard website monitors merely check HTTP 200 OK status codes. Conventional web scrapers alert on every single request because modern web pages fluctuate incessantly due to:
+        </p>
+        <ul class="list-disc pl-5 space-y-1.5 text-zinc-700 dark:text-zinc-200">
+          <li><strong>Relative and absolute timestamps</strong> (e.g. <em>"updated 4 minutes ago"</em>, live UTC clocks).</li>
+          <li><strong>Real-time counters and vanity metrics</strong> (e.g. <em>"1,429 views"</em>, <em>"98 likes"</em>).</li>
+          <li><strong>Session tokens, CSRF nonces, and dynamic advertisement scripts</strong>.</li>
+          <li><strong>A/B testing wrappers and localized banners</strong>.</li>
+        </ul>
+        <p>
+          ChangeWatch solves this through <strong>deterministic noise suppression</strong>, <strong>targeted CSS subtrees</strong>, and <strong>semantic change verification</strong>. Only qualifying modifications trigger alert dispatches, preventing notification exhaustion.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Normalization Pipeline -->
+  <section id="pipeline" class="space-y-4">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+      <h2 class="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">2. The Noise Normalization Pipeline</h2>
+    </div>
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-6 sm:p-8 space-y-5 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+        <p>
+          Before computing a cryptographic SHA-256 fingerprint, raw HTML and extracted text pass through several deterministic filtering passes in <code class="font-mono text-zinc-900 dark:text-zinc-100">app/services/normalizer.py</code>:
+        </p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+            <h3 class="font-bold text-zinc-950 dark:text-zinc-100 text-xs uppercase tracking-wider">Timestamp Neutralization</h3>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Matches ISO 8601 strings, UNIX epoch dates, and natural phrases (e.g., <em>"5 mins ago"</em>, <em>"just now"</em>) replacing them with invariant placeholders (<code class="font-mono text-zinc-800 dark:text-zinc-200">[volatile-timestamp]</code>).
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+            <h3 class="font-bold text-zinc-950 dark:text-zinc-100 text-xs uppercase tracking-wider">Dynamic Counter Filtering</h3>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Strips volatile social engagement metrics and follower numbers (e.g., <em>"12,304 reads"</em>, <em>"45 comments"</em>) into <code class="font-mono text-zinc-800 dark:text-zinc-200">[volatile-counter]</code> tokens.
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+            <h3 class="font-bold text-zinc-950 dark:text-zinc-100 text-xs uppercase tracking-wider">Whitespace Normalization</h3>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Collapses non-breaking spaces (<code class="font-mono text-zinc-800 dark:text-zinc-200">&amp;nbsp;</code>), extraneous line breaks, and indentation into uniform single-line paragraph structures.
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+            <h3 class="font-bold text-zinc-950 dark:text-zinc-100 text-xs uppercase tracking-wider">Sensitivity Thresholds</h3>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Users can tune thresholds (<code class="font-mono text-zinc-800 dark:text-zinc-200">low</code>, <code class="font-mono text-zinc-800 dark:text-zinc-200">medium</code>, <code class="font-mono text-zinc-800 dark:text-zinc-200">high</code>) measuring edit distance ratios so trivial punctuation or single-letter spelling fixes do not trigger alerts.
+            </p>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/80 text-amber-900 dark:text-amber-200 text-xs">
+          <strong>The Store-on-Change Invariant:</strong> When a scheduled check detects that the normalized content matches the existing baseline, ChangeWatch strictly records lightweight run telemetry (<code class="font-mono">CheckRun</code> status, duration, timestamp). Full screenshot files and DOM snapshots are saved <em>only</em> for the initial baseline and qualified change events, preserving disk and S3 bandwidth.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Visual Region Studio -->
+  <section id="regions" class="space-y-4">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+      <h2 class="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">3. Visual Region Studio</h2>
+    </div>
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-6 sm:p-8 space-y-4 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+        <p>
+          ChangeWatch features a point-and-click visual region picker (<code class="font-mono text-zinc-900 dark:text-zinc-100">/monitors/{id}/regions</code>):
+        </p>
+        <ul class="list-disc pl-5 space-y-2 text-zinc-700 dark:text-zinc-200">
+          <li><strong>Sanitized Sandboxed Preview:</strong> Renders target HTML in an isolated <code class="font-mono">&lt;iframe sandbox&gt;</code> with scripts, external fetches, and event handlers neutralized.</li>
+          <li><strong>Element Hover &amp; Inspector:</strong> Injected JavaScript highlights DOM elements on hover, displaying floating selector tags.</li>
+          <li><strong>Bidirectional postMessage:</strong> Clicking an element calculates optimal, resilient CSS selectors (IDs, distinct classes, and structural paths) and transmits them to the parent ChangeWatch studio.</li>
+          <li><strong>Dual Mode Configuration:</strong>
+            <ul class="list-disc pl-5 mt-1 space-y-1 text-zinc-600 dark:text-zinc-400">
+              <li><strong>Watch Regions:</strong> Narrow the capture scope exclusively to designated blocks (e.g., <code class="font-mono">#pricing-table</code> or <code class="font-mono">.release-notes</code>).</li>
+              <li><strong>Ignore Regions:</strong> Excise distracting blocks like cookie banners, comment widgets, or real-time clocks prior to comparison.</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: Multi-Mode Diff Engine -->
+  <section id="diff-studio" class="space-y-4">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-cyan-600"></span>
+      <h2 class="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">4. Multi-Mode Version Comparison Studio</h2>
+    </div>
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-6 sm:p-8 space-y-4 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+        <p>
+          When a change is detected, ChangeWatch captures the new state as a distinct numbered version (<code class="font-mono">Version</code>). The Comparison Studio provides four specialized analysis lenses:
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+            <div class="font-bold text-zinc-900 dark:text-zinc-100 mb-1">1. Line-by-Line Text Diff</div>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Accessible additions (<code class="text-emerald-600 dark:text-emerald-400">+ green</code>) and deletions (<code class="text-rose-600 dark:text-rose-400">- red</code>) with line numbering and diff summaries.</p>
+          </div>
+          <div class="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+            <div class="font-bold text-zinc-900 dark:text-zinc-100 mb-1">2. Side-by-Side Dual Pane</div>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Split viewport comparing Baseline vs Current screenshots with locked synchronized vertical scrolling.</p>
+          </div>
+          <div class="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+            <div class="font-bold text-zinc-900 dark:text-zinc-100 mb-1">3. Draggable Swipe Slider</div>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Interactive before/after slider with drag handle, keyboard arrow navigation, and touch swipe gestures.</p>
+          </div>
+          <div class="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+            <div class="font-bold text-zinc-900 dark:text-zinc-100 mb-1">4. Computer Vision Pixel Mask</div>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Calculated via Pillow image analysis, rendering a high-contrast red overlay revealing layout and styling shifts.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Numeric Metric Tracking & Keyword Filtering -->
+  <section id="numeric-keywords" class="space-y-4">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-violet-600"></span>
+      <h2 class="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">5. Numeric Tracking &amp; Keyword Rules</h2>
+    </div>
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-6 sm:p-8 space-y-4 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <h3 class="font-bold text-zinc-900 dark:text-zinc-100 text-sm">Numeric Value Extraction &amp; Sparklines</h3>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+              Target specific numeric elements (e.g. <code class="font-mono">.stock-price</code>, <code class="font-mono">#inventory-count</code>). ChangeWatch automatically parses currencies (<code class="font-mono">$</code>, <code class="font-mono">€</code>, <code class="font-mono">£</code>, <code class="font-mono">₹</code>) and metrics into structured history records, plotting real-time SVG sparklines with High, Low, and Current badges.
+            </p>
+          </div>
+          <div class="space-y-2">
+            <h3 class="font-bold text-zinc-900 dark:text-zinc-100 text-sm">Keyword-Only Alert Filtering</h3>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+              Specify trigger keywords (e.g. <em>"out of stock"</em>, <em>"restocked"</em>, <em>"price drop"</em>). If content changes, ChangeWatch archives the new version for historical accuracy, but suppresses notification dispatch unless one of your specified keywords appears in the added lines.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 6: SSRF Defense Fortress -->
+  <section id="security" class="space-y-4">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-rose-600"></span>
+      <h2 class="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">6. Two-Tier SSRF Defense Fortress</h2>
+    </div>
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-6 sm:p-8 space-y-4 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+        <p>
+          Allowing automated browser agents to visit user-supplied URLs poses significant Server-Side Request Forgery (SSRF) risks. ChangeWatch implements defense-in-depth:
+        </p>
+        <div class="space-y-3 font-mono text-xs">
+          <div class="p-3.5 rounded-xl bg-rose-50/50 dark:bg-rose-950/30 border border-rose-200/60 dark:border-rose-900/60 text-rose-900 dark:text-rose-200 space-y-1">
+            <div class="font-bold">Tier 1: Pre-Navigation DNS &amp; IP Validation</div>
+            <div class="text-[11px] leading-relaxed">
+              Every target URL is checked before navigation. ChangeWatch resolves domain DNS and strictly blocks RFC 1918 private IPv4 subnets (<code class="font-bold">10.0.0.0/8</code>, <code class="font-bold">172.16.0.0/12</code>, <code class="font-bold">192.168.0.0/16</code>), loopbacks (<code class="font-bold">127.0.0.1</code>, <code class="font-bold">::1</code>), broadcast addresses, and cloud instance metadata services (<code class="font-bold">169.254.169.254</code>, <code class="font-bold">metadata.google.internal</code>). Embedded credentials (<code class="font-bold">user:pass@host</code>) are rejected.
+            </div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-rose-50/50 dark:bg-rose-950/30 border border-rose-200/60 dark:border-rose-900/60 text-rose-900 dark:text-rose-200 space-y-1">
+            <div class="font-bold">Tier 2: Playwright Subresource Route Interception</div>
+            <div class="text-[11px] leading-relaxed">
+              A malicious public website could embed an internal resource (e.g. <code class="font-bold">&lt;img src="http://169.254.169.254/latest/meta-data/"&gt;</code>) or issue an HTTP 302 redirect to an internal IP. ChangeWatch attaches a network interceptor (<code class="font-bold">page.route("**/*")</code>) inside Chromium that intercepts every outbound subresource fetch, validating destinations and immediately aborting suspicious traffic.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 7: Vercel Serverless Architecture -->
+  <section id="vercel" class="space-y-4">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+      <h2 class="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">7. Vercel Serverless &amp; Remote Chromium Architecture</h2>
+    </div>
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-6 sm:p-8 space-y-5 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+        <p>
+          ChangeWatch's FastAPI web application is designed to run seamlessly on Vercel as a Python serverless function. Because serverless runtimes are short-lived, have read-only temporary filesystems, and cannot launch Chromium locally or run perpetual scheduler loops, the architecture bifurcates cleanly:
+        </p>
+
+        <!-- Comparison Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+            <div class="eyebrow-badge bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-300">OPTION A (RECOMMENDED)</div>
+            <h3 class="font-bold text-zinc-950 dark:text-zinc-100 text-sm">Managed Browserbase CDP</h3>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Vercel connects to Browserbase's managed browser cloud over Chrome DevTools Protocol (CDP). Configure <code class="font-mono text-zinc-800 dark:text-zinc-200">BROWSERBASE_API_KEY</code> and <code class="font-mono text-zinc-800 dark:text-zinc-200">BROWSERBASE_PROJECT_ID</code> in Vercel project settings. The web app acquires short-lived sessions, performs captures, applies SSRF filters, and releases the session.
+            </p>
+          </div>
+
+          <div class="p-5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+            <div class="eyebrow-badge bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-300">OPTION B</div>
+            <h3 class="font-bold text-zinc-950 dark:text-zinc-100 text-sm">Self-Hosted Browser Worker</h3>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Deploy the repository Docker container with <code class="font-mono text-zinc-800 dark:text-zinc-200">python -m uvicorn app.worker_api:app --port 8001</code>. Set <code class="font-mono text-zinc-800 dark:text-zinc-200">BROWSER_WORKER_URL</code> and <code class="font-mono text-zinc-800 dark:text-zinc-200">BROWSER_WORKER_TOKEN</code> in Vercel. The worker exposes authenticated <code class="font-mono text-zinc-800 dark:text-zinc-200">/internal/capture</code> to execute Playwright Chromium remotely.
+            </p>
+          </div>
+        </div>
+
+        <div class="space-y-3 pt-2">
+          <h3 class="font-bold text-zinc-950 dark:text-zinc-100 text-xs uppercase tracking-wider">Automated Background Scheduling on Serverless</h3>
+          <p class="text-xs text-zinc-600 dark:text-zinc-300">
+            Since Vercel cannot run background loop daemons:
+          </p>
+          <ul class="list-disc pl-5 space-y-1.5 text-zinc-700 dark:text-zinc-300 text-xs">
+            <li><strong>Immediate First Check:</strong> When a user creates a new monitor on Vercel, the first baseline check executes synchronously inline so the monitor is never stuck in a pending queue.</li>
+            <li><strong>GitHub Actions Cron Runner:</strong> The included workflow (<code class="font-mono">.github/workflows/monitor-scheduler.yml</code>) calls the protected endpoint <code class="font-mono">/internal/worker/tick</code> every 5 minutes using the shared secret <code class="font-mono">CRON_SECRET</code>. Each invocation schedules due monitors and executes queued checks.</li>
+            <li><strong>High-Volume Daemon Mode:</strong> For enterprise scale or sub-minute intervals, run <code class="font-mono">workers/scheduler_process.py</code> and <code class="font-mono">workers/check_worker.py</code> as persistent container processes.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 8: Database & Storage Strategy -->
+  <section id="storage" class="space-y-4">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+      <h2 class="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">8. Database &amp; Object Storage Configuration</h2>
+    </div>
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-6 sm:p-8 space-y-4 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 space-y-2">
+            <h3 class="font-bold text-zinc-950 dark:text-zinc-100 text-xs uppercase tracking-wider">PostgreSQL &amp; Neon Pooling</h3>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+              ChangeWatch supports Neon pooled connection strings (<code class="font-mono">DATABASE_URL</code>) for fast serverless execution. Alembic migrations are applied via unpooled connections (<code class="font-mono">NEON_DATABASE_URL</code>) in GitHub Actions to prevent schema lock contention.
+            </p>
+          </div>
+          <div class="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 space-y-2">
+            <h3 class="font-bold text-zinc-950 dark:text-zinc-100 text-xs uppercase tracking-wider">S3-Compatible Artifact Storage</h3>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Configure <code class="font-mono">ARTIFACT_STORAGE_BACKEND=s3</code> with <code class="font-mono">S3_BUCKET</code>, <code class="font-mono">S3_REGION</code>, and optional <code class="font-mono">S3_ENDPOINT_URL</code> (supports AWS S3, Cloudflare R2, MinIO). If S3 credentials are not configured, text comparison continues seamlessly while screenshot storage is gracefully omitted.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Box -->
+  <div class="p-8 rounded-2xl bg-zinc-950 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
+    <div>
+      <h3 class="text-lg font-bold">Ready to start tracking?</h3>
+      <p class="text-xs text-zinc-400 mt-1">Deploy an autonomous monitor in 30 seconds with noise suppression.</p>
+    </div>
+    <div class="flex items-center gap-3 shrink-0">
+      <a href="/contact" class="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 transition-colors">
+        Contact Support
+      </a>
+      <a href="/auth/signup" class="btn-island bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 text-xs font-bold shadow-md shadow-blue-500/30">
+        <span>Get Started &rarr;</span>
+      </a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

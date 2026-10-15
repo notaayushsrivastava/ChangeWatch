@@ -29,10 +29,10 @@
     <!-- Card 1: Total -->
     <div class="double-bezel">
       <div class="double-bezel-inner p-5 flex flex-col justify-between h-full">
-        <div class="text-[10px] font-bold tracking-[0.15em] uppercase text-zinc-400 dark:text-zinc-500">Total Tracked</div>
+        <div class="text-[10px] font-bold tracking-[0.15em] uppercase text-zinc-400 dark:text-zinc-300">Total Tracked</div>
         <div class="flex items-baseline justify-between mt-3">
           <div class="text-3xl font-extrabold text-zinc-950 dark:text-zinc-100 font-mono tracking-tight">{{ monitors|length }}</div>
-          <span class="text-[11px] text-zinc-400 dark:text-zinc-500 font-medium">endpoints</span>
+          <span class="text-[11px] text-zinc-400 dark:text-zinc-300 font-medium">endpoints</span>
         </div>
       </div>
     </div>
@@ -156,7 +156,7 @@
               {% endif %}
             </div>
 
-            <div class="text-[11px] font-mono font-medium text-zinc-400 dark:text-zinc-500 bg-zinc-100/80 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md">
+            <div class="text-[11px] font-mono font-medium text-zinc-400 dark:text-zinc-300 bg-zinc-100/80 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md">
               {{ mon.interval_minutes }}m cadence
             </div>
           </div>
@@ -165,7 +165,7 @@
           <h3 class="font-bold text-zinc-950 dark:text-zinc-100 text-base group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors tracking-tight truncate">
             <a href="/monitors/{{ mon.id }}">{{ mon.name }}</a>
           </h3>
-          <p class="text-xs text-zinc-400 dark:text-zinc-500 font-mono truncate mt-1" title="{{ mon.url }}">{{ mon.url }}</p>
+          <p class="text-xs text-zinc-400 dark:text-zinc-300 font-mono truncate mt-1" title="{{ mon.url }}">{{ mon.url }}</p>
 
           <!-- Error or Alert Tag if error -->
           {% if mon.last_error_message %}

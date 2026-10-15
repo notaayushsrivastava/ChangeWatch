@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy — ChangeWatch{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-10 pb-16">
+
+  <!-- Header -->
+  <div class="pb-6 border-b border-zinc-200/80 dark:border-zinc-800">
+    <div class="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500 mb-2 font-mono">
+      <a href="/" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">ChangeWatch</a>
+      <span>/</span>
+      <span class="text-zinc-700 dark:text-zinc-300">Legal</span>
+    </div>
+    <div class="eyebrow-badge bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-300 mb-3">DATA PRIVACY &amp; SECURITY</div>
+    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-zinc-950 dark:text-zinc-50">Privacy Policy</h1>
+    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-2 font-mono">Last updated: October 2026 • Effective Date: October 15, 2026</p>
+  </div>
+
+  <div class="double-bezel">
+    <div class="double-bezel-inner p-6 sm:p-10 space-y-8 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+      
+      <!-- Section 1 -->
+      <section class="space-y-3">
+        <h2 class="text-base font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">1. Introduction &amp; Ownership</h2>
+        <p>
+          ChangeWatch is an autonomous web monitoring service developed and maintained by <strong>Aayush Srivastava</strong>. We are committed to strict data privacy, minimal data retention, and absolute transparency. This Privacy Policy governs the collection, processing, and storage of information when you access or use ChangeWatch.
+        </p>
+        <p>
+          For any privacy inquiries or data rights requests, please contact Aayush Srivastava directly at <a href="mailto:aayush@aayushsrivastava.com" class="text-blue-600 dark:text-blue-400 font-semibold hover:underline">aayush@aayushsrivastava.com</a>.
+        </p>
+      </section>
+
+      <!-- Section 2 -->
+      <section class="space-y-3">
+        <h2 class="text-base font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">2. Information We Collect</h2>
+        <p>We adhere to the principle of strict data minimization:</p>
+        <ul class="list-disc pl-5 space-y-2 text-zinc-700 dark:text-zinc-200">
+          <li><strong>Account Information:</strong> When you register, we collect your email address and timezone. Passwords are never stored in plaintext; they are securely salted and hashed using bcrypt.</li>
+          <li><strong>Monitoring Configurations:</strong> Target public URLs, check intervals, CSS watch/ignore selectors, and keyword filters you explicitly configure.</li>
+          <li><strong>Encrypted Alert Destinations:</strong> Webhook URLs (such as Discord channels) and notification email addresses. All destination URLs and webhook secrets are encrypted at rest using symmetric 256-bit Fernet cryptography.</li>
+          <li><strong>Public Snapshot Evidence:</strong> Text excerpts and screenshots of public pages you configure us to monitor. Under our <strong>Store-on-Change Policy</strong>, unchanged check runs do not store any screenshot or DOM files.</li>
+        </ul>
+      </section>
+
+      <!-- Section 3 -->
+      <section class="space-y-3">
+        <h2 class="text-base font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">3. Cookies &amp; Local Browser Storage</h2>
+        <p>
+          ChangeWatch does <strong>not</strong> use third-party advertising cookies, cross-site trackers, or behavioral profiling tools. We utilize only:
+        </p>
+        <ul class="list-disc pl-5 space-y-1.5 text-zinc-700 dark:text-zinc-200">
+          <li><strong>Essential Session Cookies:</strong> Cryptographically signed HTTP cookies used solely to maintain authenticated user sessions and validate CSRF security tokens.</li>
+          <li><strong>Local Browser Storage (<code class="font-mono text-zinc-900 dark:text-zinc-100">localStorage</code>):</strong> Used strictly on your device to persist UI preferences, specifically:
+            <ul class="list-circle pl-5 mt-1 space-y-1 text-zinc-500 dark:text-zinc-400">
+              <li><code class="font-mono">cw_theme</code>: Saves your preferred visual theme (light or dark mode).</li>
+              <li><code class="font-mono">cw_motion</code>: Saves your Windows reduced-motion optimization preference.</li>
+              <li><code class="font-mono">cw_cookie_consent</code>: Stores your cookie banner acknowledgment.</li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Section 4 -->
+      <section class="space-y-3">
+        <h2 class="text-base font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">4. Public-Only Scraping &amp; SSRF Safety</h2>
+        <p>
+          ChangeWatch is built strictly for public web surveillance. Our automated headless browser agents do not log into third-party sites, do not store third-party credentials, and actively block all attempts to monitor private, internal, or cloud metadata endpoints.
+        </p>
+      </section>
+
+      <!-- Section 5 -->
+      <section class="space-y-3">
+        <h2 class="text-base font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">5. Data Retention &amp; User Control</h2>
+        <p>
+          You retain full ownership of your data. When you delete a monitor or alert destination, all associated historical versions, snapshots, and alert event logs are immediately and permanently removed from our active database and artifact stores.
+        </p>
+      </section>
+
+      <!-- Section 6 -->
+      <section class="space-y-3">
+        <h2 class="text-base font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">6. Contact Information</h2>
+        <p>
+          If you have questions regarding this Privacy Policy, please reach out to:
+        </p>
+        <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono text-xs space-y-1">
+          <div class="font-bold text-zinc-900 dark:text-zinc-100">Aayush Srivastava</div>
+          <div class="text-zinc-500 dark:text-zinc-400">Lead Architect &amp; Maintainer, ChangeWatch</div>
+          <div class="text-blue-600 dark:text-blue-400">Email: <a href="mailto:aayush@aayushsrivastava.com" class="hover:underline">aayush@aayushsrivastava.com</a></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
