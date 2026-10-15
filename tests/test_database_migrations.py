@@ -12,5 +12,5 @@ def test_alembic_versioned_database_is_safe_to_upgrade():
 
 
 def test_existing_unversioned_schema_is_refused():
-    with pytest.raises(RuntimeError, match="unversioned tables: users"):
+    with pytest.raises(RuntimeError, match="unversioned tables: .*users"):
         validate_initial_schema({"users", "monitors"})
