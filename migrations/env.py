@@ -27,8 +27,25 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+def _run_with_connection(connection) -> None:
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        compare_type=True,
+    )
+    with context.begin_transaction():
+        context.run_migrations()
+
+
 def run_migrations_online() -> None:
-    """Run migrations using the application's configured database URL."""
+    """Run migrations using the configured or caller-supplied database connection."""
+    # Recovery/startup migrations pass a single direct connection so the advisory lock
+    # and the actual DDL are guaranteed to use the same PostgreSQL session.
+    supplied_connection = config.attributes.get("connection")
+    if supplied_connection is not None:
+        _run_with_connection(supplied_connection)
+        return
+
     connectable = create_engine(
         settings.DATABASE_URL,
         poolclass=pool.NullPool,
@@ -36,13 +53,7 @@ def run_migrations_online() -> None:
     )
     try:
         with connectable.connect() as connection:
-            context.configure(
-                connection=connection,
-                target_metadata=target_metadata,
-                compare_type=True,
-            )
-            with context.begin_transaction():
-                context.run_migrations()
+            _run_with_connection(connection)
     finally:
         connectable.dispose()
 
