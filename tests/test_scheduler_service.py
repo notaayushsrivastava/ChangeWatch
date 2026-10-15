@@ -29,14 +29,20 @@ def test_scheduler_enqueues_active_monitor_without_first_check(db_session):
     count = run_scheduler_tick(db_session)
 
     assert count == 1
-    job = db_session.query(QueueJob).filter(QueueJob.task_type == "check_monitor").first()
+    job = db_session.query(QueueJob).filter(
+        QueueJob.task_type == "check_monitor",
+        QueueJob.payload_json.like(f'%"monitor_id": "{monitor.id}"%'),
+    ).first()
     assert job is not None
     assert job.status == "pending"
     assert job.payload["monitor_id"] == monitor.id
 
     # Repeated ticks coalesce; they must not flood the queue with duplicate jobs.
     assert run_scheduler_tick(db_session) == 0
-    assert db_session.query(QueueJob).filter(QueueJob.task_type == "check_monitor").count() == 1
+    assert db_session.query(QueueJob).filter(
+        QueueJob.task_type == "check_monitor",
+        QueueJob.payload_json.like(f'%"monitor_id": "{monitor.id}"%'),
+    ).count() == 1
 
 
 def test_scheduler_recovers_stale_running_job_and_preserves_retry(db_session):
