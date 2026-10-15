@@ -67,6 +67,8 @@ def recover_stale_jobs(db: Session, now: datetime | None = None) -> int:
                 monitor.last_error_code = "WORKER_TIMEOUT"
                 monitor.last_error_message = job.error_message
                 monitor.last_checked_at = now
+        if monitor:
+            monitor.next_check_at = now + timedelta(minutes=max(15, monitor.interval_minutes))
         recovered += 1
 
     if recovered:
