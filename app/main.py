@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
     # competing cold starts and refuses an existing unversioned schema.
     if settings.MIGRATE_DATABASE_ON_STARTUP:
         from app.database_migrations import apply_database_migrations
-        apply_database_migrations(require_direct_postgres=True)
+        apply_database_migrations(require_postgres=True)
 
     # Vercel's function filesystem is not durable; S3-compatible object storage
     # is used there. Local/Docker development uses the mounted artifact directory.
