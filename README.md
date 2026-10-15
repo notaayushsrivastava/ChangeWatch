@@ -98,9 +98,19 @@ The FastAPI/Jinja web application can run as a Vercel Python function. Vercel is
 5. For emergency recovery only, `MIGRATE_DATABASE_ON_STARTUP=true` can temporarily apply pending Alembic revisions using the configured managed PostgreSQL URL. This setting is off by default, refuses an unversioned non-empty schema, and serializes concurrent startup attempts with a transaction-scoped lock. Disable it immediately after recovery; prefer the guarded GitHub workflow for routine deployments.
 6. Deploy a preview and verify sign-up, sign-in, DB connectivity, CSS and routes before promoting it to production.
 
-### Remote Chromium worker for Vercel region preview
+### Remote Chromium for Vercel region preview
 
-Vercel can host the web UI, but its request runtime should not launch local Chromium. The app now supports a separate, authenticated browser API:
+Vercel can host the web UI, but the function should connect to a remote Chromium browser rather than attempt to launch one locally. Two supported backends are available.
+
+**Option A — Managed Browserbase (simplest):**
+
+1. Install the [Browserbase integration from the Vercel Marketplace](https://vercel.com/marketplace/browserbase) on the ChangeWatch project and configure its API key and Browserbase project ID.
+2. Ensure the Vercel environment contains `BROWSERBASE_API_KEY` and `BROWSERBASE_PROJECT_ID`. Set `BROWSERBASE_SESSION_TIMEOUT_SECONDS=120` if you want to override the default session timeout.
+3. Redeploy Vercel, open a monitor's **Choose Regions** page, and check the worker/capture logs if the preview fails.
+
+The app creates a short-lived Browserbase session, connects to it via Playwright CDP, applies the existing URL/subresource safety checks, and requests session release after capture. Browser sessions are billed/limited by the Browserbase plan.
+
+**Option B — Self-host the browser worker:**
 
 1. Deploy this repository as a **persistent Docker/container service** on a host that supports the included Playwright image. Use the same repository Dockerfile and set the service start command to:
    ```bash
@@ -109,10 +119,10 @@ Vercel can host the web UI, but its request runtime should not launch local Chro
    The worker app exposes only `/healthz` and the authenticated `/internal/capture` endpoint; it does not mount the user's web/database routes.
 2. Generate a unique random token of at least 32 characters. Set it as `BROWSER_WORKER_TOKEN` in the worker host's environment.
 3. In Vercel project settings, set `BROWSER_WORKER_URL` to the worker's public **HTTPS origin** (no `/internal/capture` suffix), and set the exact same secret as `BROWSER_WORKER_TOKEN`. Optionally set `BROWSER_WORKER_TIMEOUT_SECONDS=45`. Redeploy the Vercel web app.
-4. Check the worker's `/healthz` endpoint, then open a monitor's **Choose Regions** page. The web app sends the requested URL to the worker; the worker validates the destination and continues applying the existing per-request SSRF protections before returning the DOM.
 
-Do not expose the local development token from `.env.example` on a public service. Use HTTPS, keep the worker token secret, and rotate it if it is exposed. The worker timeout is capped below Vercel's request limit; unusually slow pages may still time out.
+The configured custom worker takes precedence over Browserbase. The browser worker validates the destination and continues applying the existing per-request SSRF protections before returning the DOM. Use HTTPS, keep the token secret, and rotate it if it is exposed. Do not use the local development token from `.env.example` on a public service.
 
+For local Docker development, `docker compose up --build` starts a separate `browser-api` service and routes region-preview captures through it. The normal monitor create/check-now actions enqueue jobs; a persistent queue worker must also be running to process scheduled monitor checks.
 For local Docker development, `docker compose up --build` starts a separate `browser-api` service and routes region-preview captures through it. The normal monitor create/check-now actions enqueue jobs; a persistent queue worker must also be running to process scheduled monitor checks.
 
 ## Docker Compose: PostgreSQL + web + scheduler + Chromium worker
