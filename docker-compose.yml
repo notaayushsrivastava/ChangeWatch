@@ -39,6 +39,8 @@ services:
       ARTIFACT_STORAGE_DIR: /app/data/artifacts
       RUN_INLINE_CHECKS: "false"
       ENABLE_INLINE_SCHEDULER: "false"
+      BROWSER_WORKER_URL: http://browser-api:8001
+      BROWSER_WORKER_TOKEN: ${BROWSER_WORKER_TOKEN:-local-dev-browser-worker-token-change-me}
     ports:
       - "8000:8000"
     volumes:
@@ -46,6 +48,27 @@ services:
     depends_on:
       init-db:
         condition: service_completed_successfully
+      browser-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # A dedicated Chromium API process. On Vercel, deploy this same image as a
+  # separate container service and configure its public URL on the web project.
+  browser-api:
+    build: .
+    env_file: .env
+    environment:
+      APP_ENV: development
+      BROWSER_WORKER_URL: ""
+      BROWSER_WORKER_TOKEN: ${BROWSER_WORKER_TOKEN:-local-dev-browser-worker-token-change-me}
+    command: ["python", "-m", "uvicorn", "app.worker_api:app", "--host", "0.0.0.0", "--port", "8001"]
+    expose:
+      - "8001"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/healthz', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     restart: unless-stopped
 
   scheduler:
