@@ -62,9 +62,15 @@ def test_scheduler_recovers_stale_running_job_and_preserves_retry(db_session):
     assert recovered == 1
     assert job.status == "pending"
     assert job.locked_at is None
-    assert job.scheduled_at > now
+    scheduled_at = job.scheduled_at
+    if scheduled_at.tzinfo is None:
+        scheduled_at = scheduled_at.replace(tzinfo=timezone.utc)
+    next_check_at = monitor.next_check_at
+    if next_check_at.tzinfo is None:
+        next_check_at = next_check_at.replace(tzinfo=timezone.utc)
+    assert scheduled_at > now
     assert monitor.last_error_code == "WORKER_TIMEOUT"
-    assert monitor.next_check_at > now
+    assert next_check_at > now
 
 
 def test_scheduler_marks_exhausted_stale_job_failed(db_session):
