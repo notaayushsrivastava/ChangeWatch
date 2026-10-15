@@ -221,7 +221,7 @@ async def _process_check_job_impl(db: Session, job: QueueJob, allow_test_fixture
     elif last_version.content_hash != content_hash and is_meaningful_change(last_version.normalized_text, normalized_text, monitor.sensitivity):
         # Meaningful change detected!
         version_id = str(uuid.uuid4())
-        screenshot_key = artifact_storage.save_screenshot(result.screenshot_bytes, monitor.id, version_id)
+        screenshot_key = _try_save_screenshot(result.screenshot_bytes, monitor.id, version_id)
 
         next_version_num = (last_version.version_number or 1) + 1
         version = Version(
