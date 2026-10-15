@@ -85,7 +85,7 @@ In production, run the components as independent processes:
 The FastAPI/Jinja web application can run as a Vercel Python function. Vercel is **not** the scheduler or browser worker host: functions can be archived, their writable filesystem is temporary, and the app must not start perpetual worker loops in a request runtime.
 
 1. Import this repository at https://vercel.com/new.
-2. Use the repository root as the project root; `pyproject.toml` points Vercel to `app.main:app` and builds the Tailwind CSS.
+2. Use the repository root as the project root; Vercel detects the FastAPI application in `app/main.py`; `vercel.json` runs the Tailwind CSS build.
 3. Configure these production environment variables in Vercel before using authenticated features:
    - `APP_ENV=production`
    - `APP_BASE_URL=https://your-deployment-domain`
