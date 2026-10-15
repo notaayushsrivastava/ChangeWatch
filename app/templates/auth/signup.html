@@ -19,12 +19,18 @@
         <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Start tracking public web pages with verified diff evidence.</p>
       </div>
 
+      {% if error %}
+      <div role="alert" aria-live="polite" class="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-200">
+        {{ error }}
+      </div>
+      {% endif %}
+
       <form action="/auth/signup" method="POST" class="space-y-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
         <div>
           <label for="email" class="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">Email address</label>
-          <input type="email" id="email" name="email" required autocomplete="email" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-400" placeholder="you@domain.com">
+          <input type="email" id="email" name="email" value="{{ email or '' }}" required autocomplete="email" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600" placeholder="you@domain.com">
         </div>
 
         <div>
@@ -35,15 +41,15 @@
         <div>
           <label for="timezone" class="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">Timezone</label>
           <select id="timezone" name="timezone" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 font-medium">
-            <option value="UTC" selected>UTC</option>
-            <option value="America/New_York">Eastern Time (US)</option>
-            <option value="America/Chicago">Central Time (US)</option>
-            <option value="America/Denver">Mountain Time (US)</option>
-            <option value="America/Los_Angeles">Pacific Time (US)</option>
-            <option value="Europe/London">London (GMT/BST)</option>
-            <option value="Europe/Paris">Central European Time</option>
-            <option value="Asia/Kolkata">India Standard Time (IST)</option>
-            <option value="Asia/Tokyo">Tokyo (JST)</option>
+            <option value="UTC" {% if not email_timezone or email_timezone == "UTC" %}selected{% endif %}>UTC</option>
+            <option value="America/New_York" {% if email_timezone == "America/New_York" %}selected{% endif %}>Eastern Time (US)</option>
+            <option value="America/Chicago" {% if email_timezone == "America/Chicago" %}selected{% endif %}>Central Time (US)</option>
+            <option value="America/Denver" {% if email_timezone == "America/Denver" %}selected{% endif %}>Mountain Time (US)</option>
+            <option value="America/Los_Angeles" {% if email_timezone == "America/Los_Angeles" %}selected{% endif %}>Pacific Time (US)</option>
+            <option value="Europe/London" {% if email_timezone == "Europe/London" %}selected{% endif %}>London (GMT/BST)</option>
+            <option value="Europe/Paris" {% if email_timezone == "Europe/Paris" %}selected{% endif %}>Central European Time</option>
+            <option value="Asia/Kolkata" {% if email_timezone == "Asia/Kolkata" %}selected{% endif %}>India Standard Time (IST)</option>
+            <option value="Asia/Tokyo" {% if email_timezone == "Asia/Tokyo" %}selected{% endif %}>Tokyo (JST)</option>
           </select>
         </div>
 
