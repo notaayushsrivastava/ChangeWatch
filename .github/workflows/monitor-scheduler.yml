@@ -16,9 +16,9 @@ concurrency:
 jobs:
   tick:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 8
     steps:
-      - name: Trigger one scheduler/queue tick
+      - name: Drain a bounded batch of due monitor jobs
         env:
           APP_URL: ${{ vars.CHANGEWATCH_APP_URL }}
           CRON_SECRET: ${{ secrets.CHANGEWATCH_CRON_SECRET }}
@@ -34,15 +34,40 @@ jobs:
             exit 1
           fi
 
-          response_file="$(mktemp)"
-          status="$(curl --silent --show-error --max-time 65 --retry 2 --retry-delay 2 \
-            --output "$response_file" --write-out '%{http_code}' \
-            --header "Authorization: Bearer ${CRON_SECRET}" \
-            "${APP_URL%/}/internal/worker/tick")"
-          cat "$response_file"
-          rm -f "$response_file"
+          # Keep each Chromium capture in its own Vercel request so one slow page
+          # can't consume the remaining execution budget for an entire batch.
+          max_ticks=5
+          for ((tick=1; tick<=max_ticks; tick++)); do
+            response_file="$(mktemp)"
+            status="$(curl --silent --show-error --max-time 65 --retry 1 --retry-delay 2 \
+              --output "$response_file" --write-out '%{http_code}' \
+              --header "Authorization: Bearer ${CRON_SECRET}" \
+              "${APP_URL%/}/internal/worker/tick")"
+            cat "$response_file"
 
-          if [[ ! "$status" =~ ^2[0-9][0-9]$ ]]; then
-            echo "::error::Scheduler endpoint returned HTTP $status."
-            exit 1
-          fi
+            if [[ ! "$status" =~ ^2[0-9][0-9]$ ]]; then
+              rm -f "$response_file"
+              echo "::error::Scheduler endpoint returned HTTP $status."
+              exit 1
+            fi
+
+            processed="$(python - "$response_file" <<'PY'
+          import json, sys
+          try:
+              with open(sys.argv[1], encoding="utf-8") as f:
+                  payload = json.load(f)
+              print("true" if payload.get("processed") else "false")
+          except Exception:
+              print("invalid")
+          PY
+            )"
+            rm -f "$response_file"
+
+            if [[ "$processed" == "false" ]]; then
+              echo "No further due jobs; drained $((tick - 1)) job(s) this run."
+              break
+            elif [[ "$processed" != "true" ]]; then
+              echo "::error::Scheduler endpoint returned an unexpected JSON response."
+              exit 1
+            fi
+          done
