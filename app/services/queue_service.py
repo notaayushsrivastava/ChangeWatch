@@ -86,6 +86,8 @@ async def _process_check_job_impl(db: Session, job: QueueJob, allow_test_fixture
     if not monitor or monitor.state == "paused":
         job.status = "completed"
         job.completed_at = datetime.now(timezone.utc)
+        job.locked_at = None
+        job.locked_by = None
         db.commit()
         return True
 
@@ -359,6 +361,7 @@ async def process_check_job(db: Session, job: QueueJob, allow_test_fixtures: boo
                 monitor.last_error_code = "WORKER_EXCEPTION"
                 monitor.last_error_message = safe_message
                 monitor.last_checked_at = now
+                monitor.next_check_at = now + timedelta(minutes=max(15, monitor.interval_minutes))
         fresh_job.locked_at = None
         fresh_job.locked_by = None
         db.commit()
