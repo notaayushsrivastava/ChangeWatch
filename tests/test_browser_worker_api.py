@@ -115,3 +115,28 @@ async def test_vercel_fails_clearly_without_worker_instead_of_launching_local_ch
     assert result.success is False
     assert result.failure_code == "BROWSER_WORKER_UNCONFIGURED"
     assert "BROWSER_WORKER_URL" in (result.error_message or "")
+
+
+@pytest.mark.asyncio
+async def test_vercel_can_use_browserbase_without_self_hosted_worker(monkeypatch):
+    from app.services import browser_capture as capture_module
+
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setattr(settings, "BROWSER_WORKER_URL", "")
+    monkeypatch.setattr(settings, "BROWSER_WORKER_TOKEN", "")
+    monkeypatch.setattr(settings, "BROWSERBASE_API_KEY", "test-browserbase-key")
+    monkeypatch.setattr(settings, "BROWSERBASE_PROJECT_ID", "test-browserbase-project")
+    monkeypatch.setattr(
+        capture_module,
+        "validate_public_url",
+        lambda url, allow_test_fixtures=False: (True, url, None),
+    )
+
+    service = BrowserCaptureService()
+    capture = AsyncMock(return_value=CaptureResult(success=True, dom_html="<html></html>"))
+    monkeypatch.setattr(service, "_capture_page_async", capture)
+
+    result = await service.capture_page("https://example.com", capture_dom=True)
+
+    assert result.success is True
+    capture.assert_awaited_once()
