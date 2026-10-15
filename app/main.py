@@ -22,8 +22,10 @@ from app.db import engine, Base
 from app.routes import auth, dashboard, monitors, versions, settings as settings_routes
 from app.services.scheduler_service import scheduler_loop
 
-# Initialize database tables
-Base.metadata.create_all(bind=engine)
+# Keep schema bootstrap out of production/serverless imports. Run
+# `python -m scripts.init_db` against a new database before first deploy.
+if not settings.is_vercel and not settings.is_production:
+    Base.metadata.create_all(bind=engine)
 
 # Background scheduler task handle
 _scheduler_task = None
@@ -31,12 +33,23 @@ _scheduler_task = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ensure artifact directory exists
-    settings.artifact_dir_path.mkdir(parents=True, exist_ok=True)
+    # Validate production configuration before touching the database or artifact store.
+    if settings.is_production:
+        settings.validate_production_config()
 
-    # Start background scheduler loop in development mode
+    # Vercel's function filesystem is not durable; S3-compatible object storage
+    # is used there. Local/Docker development uses the mounted artifact directory.
+    if not settings.is_vercel:
+        settings.artifact_dir_path.mkdir(parents=True, exist_ok=True)
+
+    # A perpetual scheduler belongs in its own process in production and on Vercel.
     global _scheduler_task
-    if settings.APP_ENV != "test":
+    if (
+        settings.APP_ENV != "test"
+        and settings.ENABLE_INLINE_SCHEDULER
+        and not settings.is_vercel
+        and not settings.is_production
+    ):
         _scheduler_task = asyncio.create_task(scheduler_loop(interval_seconds=30))
 
     yield
@@ -59,9 +72,17 @@ app = FastAPI(
 
 # Mount static assets
 static_path = Path(__file__).parent / "static"
-static_path.mkdir(parents=True, exist_ok=True)
-(static_path / "dist").mkdir(parents=True, exist_ok=True)
+# Vercel's deployed bundle is read-only. The CSS build step creates dist/app.css.
+if not settings.is_vercel:
+    static_path.mkdir(parents=True, exist_ok=True)
+    (static_path / "dist").mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
+
+@app.get("/healthz", include_in_schema=False)
+def healthz():
+    """Lightweight process health probe; external dependencies are configured separately."""
+    return {"status": "ok", "service": "changewatch"}
+
 
 # Include Routers
 app.include_router(auth.router)
