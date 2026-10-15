@@ -19,7 +19,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from app.config import settings
 from app.db import engine, Base
-from app.routes import auth, dashboard, monitors, versions, settings as settings_routes
+from app.routes import auth, dashboard, monitors, versions, settings as settings_routes, worker_tick
 from app.services.scheduler_service import scheduler_loop
 
 # Keep schema bootstrap out of production/serverless imports. Run
@@ -97,6 +97,7 @@ app.include_router(dashboard.router)
 app.include_router(monitors.router)
 app.include_router(versions.router)
 app.include_router(settings_routes.router)
+app.include_router(worker_tick.router)
 
 templates = Jinja2Templates(directory="app/templates")
 
