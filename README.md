@@ -95,7 +95,7 @@ The FastAPI/Jinja web application can run as a Vercel Python function. Vercel is
    - `ENCRYPTION_KEY` (a freshly generated Fernet key)
    - production email provider settings if outbound mail alerts are required
 4. Apply reviewed, versioned Alembic migrations from a trusted environment with `python -m scripts.init_db` after setting `DATABASE_URL`. The initial revision creates the schema on a new database; existing databases created by the older application need a schema review before baselining.
-6. Deploy a preview and verify login, DB connectivity, CSS and routes before promoting it to production.
+7. Deploy a preview and verify login, DB connectivity, CSS and routes before promoting it to production.
 
 The region-picker endpoint that directly invokes Chromium returns an explicit 503 on Vercel until a remote browser-worker endpoint is wired in. The normal monitor create/check-now actions enqueue jobs; a persistent worker must be running to process them.
 
