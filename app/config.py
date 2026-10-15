@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -47,6 +48,18 @@ class Settings(BaseSettings):
 
     ENCRYPTION_KEY: str = "dGhpc2lzYXZlcnlzZWNyZXRrZXkxMjM0NTY3ODkwMTI="
     LOG_LEVEL: str = "INFO"
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def normalize_postgres_url(cls, value: object) -> object:
+        """Use psycopg 3 for Neon/Postgres URLs while preserving query parameters."""
+        if not isinstance(value, str):
+            return value
+        if value.startswith("postgres://"):
+            return "postgresql+psycopg://" + value[len("postgres://"):]
+        if value.startswith("postgresql://"):
+            return "postgresql+psycopg://" + value[len("postgresql://"):]
+        return value
 
     @property
     def is_vercel(self) -> bool:
