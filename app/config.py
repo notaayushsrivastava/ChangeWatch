@@ -102,7 +102,7 @@ class Settings(BaseSettings):
         return configured or ("s3" if self.is_vercel else "local")
 
     def validate_production_config(self) -> None:
-        """Fail closed instead of using development secrets or ephemeral storage in production."""
+        """Reject unsafe credentials/database URLs; screenshot storage is an optional capability."""
         problems = []
         if (
             len(self.APP_SECRET_KEY) < 32
@@ -119,8 +119,9 @@ class Settings(BaseSettings):
             problems.append("ENCRYPTION_KEY must be a valid, unique Fernet key")
         if not self.DATABASE_URL.lower().startswith("postgresql+psycopg://"):
             problems.append("DATABASE_URL must use managed PostgreSQL with the psycopg driver")
-        if self.artifact_backend != "s3" or not self.S3_BUCKET.strip():
-            problems.append("Set ARTIFACT_STORAGE_BACKEND=s3 and configure S3_BUCKET for durable artifacts")
+        # Screenshots are optional. When durable object storage is unavailable,
+        # the queue processor keeps the text baseline and monitoring status working.
+        # Configure S3_BUCKET to enable screenshot history and visual diffs.
         if self.APP_BASE_URL.startswith("http://localhost"):
             problems.append("APP_BASE_URL must be the public HTTPS application URL")
         if self.is_vercel:
