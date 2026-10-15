@@ -1,11 +1,9 @@
 """Apply reviewed, versioned database migrations to the configured database."""
-from alembic import command
-from alembic.config import Config
+from app.database_migrations import apply_database_migrations
 
 
 def main() -> None:
-    config = Config("alembic.ini")
-    command.upgrade(config, "head")
+    apply_database_migrations()
     print("ChangeWatch database migrations are up to date.")
 
 
