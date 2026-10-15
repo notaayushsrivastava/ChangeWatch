@@ -57,6 +57,7 @@ def test_worker_tick_processes_initial_job_instead_of_leaving_it_pending(client,
     db_session.refresh(monitor)
     job = db_session.query(QueueJob).filter(
         QueueJob.task_type == "check_monitor",
+        QueueJob.payload_json.like(f'%"monitor_id": "{monitor.id}"%'),
     ).first()
     assert monitor.last_status == "error"
     assert monitor.last_error_code == "BROWSER_WORKER_UNCONFIGURED"
