@@ -98,7 +98,22 @@ The FastAPI/Jinja web application can run as a Vercel Python function. Vercel is
 5. For emergency recovery only, `MIGRATE_DATABASE_ON_STARTUP=true` can temporarily apply pending Alembic revisions using the configured managed PostgreSQL URL. This setting is off by default, refuses an unversioned non-empty schema, and serializes concurrent startup attempts with a transaction-scoped lock. Disable it immediately after recovery; prefer the guarded GitHub workflow for routine deployments.
 6. Deploy a preview and verify sign-up, sign-in, DB connectivity, CSS and routes before promoting it to production.
 
-The region-picker endpoint that directly invokes Chromium returns an explicit 503 on Vercel until a remote browser-worker endpoint is wired in. The normal monitor create/check-now actions enqueue jobs; a persistent worker must be running to process them.
+### Remote Chromium worker for Vercel region preview
+
+Vercel can host the web UI, but its request runtime should not launch local Chromium. The app now supports a separate, authenticated browser API:
+
+1. Deploy this repository as a **persistent Docker/container service** on a host that supports the included Playwright image. Use the same repository Dockerfile and set the service start command to:
+   ```bash
+   python -m uvicorn app.worker_api:app --host 0.0.0.0 --port ${PORT:-8001}
+   ```
+   The worker app exposes only `/healthz` and the authenticated `/internal/capture` endpoint; it does not mount the user's web/database routes.
+2. Generate a unique random token of at least 32 characters. Set it as `BROWSER_WORKER_TOKEN` in the worker host's environment.
+3. In Vercel project settings, set `BROWSER_WORKER_URL` to the worker's public **HTTPS origin** (no `/internal/capture` suffix), and set the exact same secret as `BROWSER_WORKER_TOKEN`. Optionally set `BROWSER_WORKER_TIMEOUT_SECONDS=45`. Redeploy the Vercel web app.
+4. Check the worker's `/healthz` endpoint, then open a monitor's **Choose Regions** page. The web app sends the requested URL to the worker; the worker validates the destination and continues applying the existing per-request SSRF protections before returning the DOM.
+
+Do not expose the local development token from `.env.example` on a public service. Use HTTPS, keep the worker token secret, and rotate it if it is exposed. The worker timeout is capped below Vercel's request limit; unusually slow pages may still time out.
+
+For local Docker development, `docker compose up --build` starts a separate `browser-api` service and routes region-preview captures through it. The normal monitor create/check-now actions enqueue jobs; a persistent queue worker must also be running to process scheduled monitor checks.
 
 ## Docker Compose: PostgreSQL + web + scheduler + Chromium worker
 
