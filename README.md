@@ -94,7 +94,7 @@ The FastAPI/Jinja web application can run as a Vercel Python function. Vercel is
    - `ARTIFACT_STORAGE_BACKEND=s3`, `S3_BUCKET`, `S3_REGION`, and `S3_PREFIX`; configure `S3_ENDPOINT_URL` for S3-compatible providers and credentials/identity as required
    - `ENCRYPTION_KEY` (a freshly generated Fernet key)
    - production email provider settings if outbound mail alerts are required
-4. Initialize a new database once from a trusted environment with `python -m scripts.init_db` after setting `DATABASE_URL`. This bootstrap creates missing tables but is not a migration system; use reviewed versioned migrations for subsequent schema changes.
+4. Apply reviewed, versioned Alembic migrations from a trusted environment with `python -m scripts.init_db` after setting `DATABASE_URL`. The initial revision creates the schema on a new database; existing databases created by the older application need a schema review before baselining.
 5. Deploy a preview and verify login, DB connectivity, CSS and routes before promoting it to production.
 
 The region-picker endpoint that directly invokes Chromium returns an explicit 503 on Vercel until a remote browser-worker endpoint is wired in. The normal monitor create/check-now actions enqueue jobs; a persistent worker must be running to process them.
@@ -115,7 +115,7 @@ The `init-db` one-shot service runs automatically after Postgres is healthy and 
 docker compose run --rm init-db
 ```
 
-This bootstrap creates tables that do not yet exist and is intended for initial setup, not schema evolution. It is not a versioned migration system; create and apply reviewed migrations for subsequent schema changes rather than treating `create_all` as a migration mechanism.
+This command applies Alembic revisions from `migrations/versions`. For each schema change, create a new reviewed revision and test upgrade/downgrade behavior on a disposable database before applying it to production. Do not use the initial revision against a legacy database that already has tables; inspect that schema first and baseline it only after confirming it matches.
 
 The Docker image uses the Playwright Python base image, so browser binaries and OS dependencies are supplied by the worker image. In a split deployment, run the scheduler/worker containers with the same `DATABASE_URL` and object-store settings as Vercel. Do not point them at the Docker Compose database unless that database is deliberately exposed through a secure private network.
 
