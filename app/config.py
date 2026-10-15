@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     )
 
     APP_ENV: str = "development"
-    APP_SECRET_KEY: str = "changewatch-dev-secret-key-at-least-32-chars-long!"
+    APP_SECRET_KEY: str = "changewatch-dev-secret-key-at-least-32-chars-long!"  # Development fallback only
     APP_BASE_URL: str = "http://localhost:8000"
 
     DATABASE_URL: str = "sqlite:///./changewatch.db"
@@ -19,6 +19,17 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
 
     ARTIFACT_STORAGE_DIR: str = "./data/artifacts"
+    ARTIFACT_STORAGE_BACKEND: str | None = None  # local or s3; defaults to s3 on Vercel
+    S3_BUCKET: str = ""
+    S3_REGION: str = "auto"
+    S3_ENDPOINT_URL: str = ""
+    S3_PREFIX: str = "changewatch"
+    AWS_ACCESS_KEY_ID: str = ""
+    AWS_SECRET_ACCESS_KEY: str = ""
+
+    # Inline/background behavior is suitable for a single-process local dev server only.
+    RUN_INLINE_CHECKS: bool = True
+    ENABLE_INLINE_SCHEDULER: bool = True
 
     BROWSER_NAV_TIMEOUT_SECONDS: int = 30
     BROWSER_CHECK_TIMEOUT_SECONDS: int = 60
@@ -38,8 +49,37 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
 
     @property
+    def is_vercel(self) -> bool:
+        return os.getenv("VERCEL", "").lower() in {"1", "true"}
+
+    @property
     def is_production(self) -> bool:
         return self.APP_ENV.lower() == "production"
+
+    @property
+    def run_inline_checks(self) -> bool:
+        return self.RUN_INLINE_CHECKS and not self.is_vercel and not self.is_production
+
+    @property
+    def artifact_backend(self) -> str:
+        configured = (self.ARTIFACT_STORAGE_BACKEND or "").strip().lower()
+        return configured or ("s3" if self.is_vercel else "local")
+
+    def validate_production_config(self) -> None:
+        """Fail closed instead of using development secrets or ephemeral storage in production."""
+        problems = []
+        if len(self.APP_SECRET_KEY) < 32 or self.APP_SECRET_KEY.startswith("changewatch-dev-"):
+            problems.append("APP_SECRET_KEY must be a unique random secret of at least 32 characters")
+        if self.ENCRYPTION_KEY == "dGhpc2lzYXZlcnlzZWNyZXRrZXkxMjM0NTY3ODkwMTI=":
+            problems.append("ENCRYPTION_KEY must be generated specifically for this deployment")
+        if self.DATABASE_URL.lower().startswith("sqlite"):
+            problems.append("DATABASE_URL must point to PostgreSQL in production")
+        if self.artifact_backend != "s3" or not self.S3_BUCKET.strip():
+            problems.append("Set ARTIFACT_STORAGE_BACKEND=s3 and configure S3_BUCKET for durable artifacts")
+        if self.APP_BASE_URL.startswith("http://localhost"):
+            problems.append("APP_BASE_URL must be the public HTTPS application URL")
+        if problems:
+            raise RuntimeError("Invalid production configuration: " + "; ".join(problems))
 
     @property
     def artifact_dir_path(self) -> Path:
