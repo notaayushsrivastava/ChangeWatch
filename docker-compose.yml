@@ -1,0 +1,89 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-changewatch}
+      POSTGRES_USER: ${POSTGRES_USER:-changewatch}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-only-change-me}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-changewatch} -d ${POSTGRES_DB:-changewatch}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  init-db:
+    build: .
+    env_file: .env
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-changewatch}:${POSTGRES_PASSWORD:-local-only-change-me}@db:5432/${POSTGRES_DB:-changewatch}
+      ARTIFACT_STORAGE_BACKEND: local
+      ARTIFACT_STORAGE_DIR: /app/data/artifacts
+    command: ["python", "-m", "scripts.init_db"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  web:
+    build: .
+    env_file: .env
+    environment:
+      APP_ENV: development
+      APP_BASE_URL: http://localhost:8000
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-changewatch}:${POSTGRES_PASSWORD:-local-only-change-me}@db:5432/${POSTGRES_DB:-changewatch}
+      ARTIFACT_STORAGE_BACKEND: local
+      ARTIFACT_STORAGE_DIR: /app/data/artifacts
+      RUN_INLINE_CHECKS: "false"
+      ENABLE_INLINE_SCHEDULER: "false"
+    ports:
+      - "8000:8000"
+    volumes:
+      - artifact-data:/app/data/artifacts
+    depends_on:
+      init-db:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  scheduler:
+    build: .
+    env_file: .env
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-changewatch}:${POSTGRES_PASSWORD:-local-only-change-me}@db:5432/${POSTGRES_DB:-changewatch}
+      ARTIFACT_STORAGE_BACKEND: local
+      ARTIFACT_STORAGE_DIR: /app/data/artifacts
+      RUN_INLINE_CHECKS: "false"
+      ENABLE_INLINE_SCHEDULER: "false"
+    command: ["python", "workers/scheduler_process.py"]
+    volumes:
+      - artifact-data:/app/data/artifacts
+    depends_on:
+      init-db:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  worker:
+    build: .
+    env_file: .env
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-changewatch}:${POSTGRES_PASSWORD:-local-only-change-me}@db:5432/${POSTGRES_DB:-changewatch}
+      ARTIFACT_STORAGE_BACKEND: local
+      ARTIFACT_STORAGE_DIR: /app/data/artifacts
+      RUN_INLINE_CHECKS: "false"
+      ENABLE_INLINE_SCHEDULER: "false"
+    command: ["python", "workers/check_worker.py"]
+    volumes:
+      - artifact-data:/app/data/artifacts
+    depends_on:
+      init-db:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  artifact-data:
