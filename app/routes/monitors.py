@@ -96,13 +96,12 @@ async def create_monitor_action(
 
     # Enqueue initial baseline check
     job = enqueue_check(db, monitor.id, is_manual=True)
-    if job and settings.run_inline_checks:
-        # Preserve the convenient single-process local flow. Production/Vercel
-        # only enqueue; the dedicated persistent worker performs Chromium work.
-        try:
-            await process_check_job(db, job)
-        except Exception:
-            pass
+    if job and (settings.run_inline_checks or settings.is_vercel):
+        # Vercel has no resident queue worker. Execute the initial job in this
+        # request so it immediately transitions to Running/OK/Error rather than
+        # remaining Pending forever. The remote-browser backend is still required
+        # for a successful Chromium capture.
+        await process_check_job(db, job)
 
     return RedirectResponse(url=f"/monitors/{monitor.id}", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -230,7 +229,7 @@ async def check_now_action(
         raise HTTPException(status_code=404, detail="Monitor not found")
 
     job = enqueue_check(db, monitor.id, is_manual=True)
-    if job and settings.run_inline_checks:
+    if job and (settings.run_inline_checks or settings.is_vercel):
         await process_check_job(db, job)
 
     return RedirectResponse(url=f"/monitors/{monitor.id}", status_code=status.HTTP_303_SEE_OTHER)
