@@ -1,8 +1,9 @@
 """Safe, versioned Alembic migrations for local setup and explicit recovery.
 
-Production/serverless startup migration is disabled by default. If enabled explicitly,
-it requires a direct PostgreSQL connection, serializes concurrent cold starts with a
-PostgreSQL advisory lock, and refuses to initialize over an unversioned existing schema.
+Production/serverless startup migration is disabled by default. When explicitly enabled
+for recovery, it serializes concurrent PostgreSQL startups with a transaction-scoped
+advisory lock (compatible with Neon pooling) and refuses to initialize an unversioned,
+non-empty schema.
 """
 from pathlib import Path
 
@@ -31,66 +32,48 @@ def validate_initial_schema(tables: set[str]) -> None:
         )
 
 
+def _alembic_config(connection) -> Config:
+    config = Config(str(_REPO_ROOT / "alembic.ini"))
+    config.set_main_option("script_location", str(_REPO_ROOT / "migrations"))
+    config.attributes["connection"] = connection
+    return config
+
+
 def apply_database_migrations(
     database_url: str | None = None,
     *,
-    require_direct_postgres: bool = False,
+    require_postgres: bool = False,
 ) -> None:
-    """Apply reviewed Alembic revisions, using the exact same connection for locking and DDL."""
-    if require_direct_postgres:
-        url = settings.MIGRATION_DATABASE_URL
-        if not url:
-            raise RuntimeError(
-                "MIGRATION_DATABASE_URL is required when startup migrations are explicitly enabled."
-            )
-    else:
-        url = database_url or settings.MIGRATION_DATABASE_URL or settings.DATABASE_URL
-
-    if require_direct_postgres:
-        if not url.startswith("postgresql+psycopg://"):
-            raise RuntimeError("Startup migrations require a PostgreSQL URL using psycopg 3.")
-        if "-pooler." in url:
-            raise RuntimeError(
-                "Startup migrations require Neon’s direct/unpooled connection, not the pooler URL."
-            )
+    """Apply reviewed Alembic revisions, serializing PostgreSQL schema changes."""
+    url = (
+        (settings.MIGRATION_DATABASE_URL or settings.DATABASE_URL)
+        if require_postgres
+        else (database_url or settings.MIGRATION_DATABASE_URL or settings.DATABASE_URL)
+    )
+    if require_postgres and not url.startswith("postgresql+psycopg://"):
+        raise RuntimeError(
+            "One-off startup migrations require managed PostgreSQL using the psycopg 3 driver."
+        )
 
     engine = create_engine(url, poolclass=NullPool, pool_pre_ping=True)
     try:
         with engine.connect() as connection:
-            lock_held = False
-            try:
-                if connection.dialect.name == "postgresql":
+            if connection.dialect.name == "postgresql":
+                # Keep lock + schema inspection + all DDL in one transaction. This
+                # works with Neon pooled URLs because PgBouncer pins a backend for
+                # the transaction, and the xact lock is released automatically.
+                with connection.begin():
                     connection.exec_driver_sql(
-                        "SELECT pg_advisory_lock(%s, %s)",
+                        "SELECT pg_advisory_xact_lock(%s, %s)",
                         (_ADVISORY_LOCK_CLASS, _ADVISORY_LOCK_OBJECT),
                     ).scalar_one()
-                    connection.commit()
-                    lock_held = True
-
+                    tables = set(inspect(connection).get_table_names())
+                    validate_initial_schema(tables)
+                    command.upgrade(_alembic_config(connection), "head")
+            else:
                 tables = set(inspect(connection).get_table_names())
-                # End the inspection query's implicit transaction before Alembic starts.
                 connection.rollback()
                 validate_initial_schema(tables)
-
-                alembic_config = Config(str(_REPO_ROOT / "alembic.ini"))
-                alembic_config.set_main_option(
-                    "script_location", str(_REPO_ROOT / "migrations")
-                )
-                alembic_config.attributes["connection"] = connection
-                command.upgrade(alembic_config, "head")
-                connection.commit()
-            finally:
-                if connection.in_transaction():
-                    connection.rollback()
-                if lock_held:
-                    try:
-                        connection.exec_driver_sql(
-                            "SELECT pg_advisory_unlock(%s, %s)",
-                            (_ADVISORY_LOCK_CLASS, _ADVISORY_LOCK_OBJECT),
-                        ).scalar_one()
-                        connection.commit()
-                    except Exception:
-                        # Closing this direct connection also releases any session lock.
-                        connection.invalidate()
+                command.upgrade(_alembic_config(connection), "head")
     finally:
         engine.dispose()
