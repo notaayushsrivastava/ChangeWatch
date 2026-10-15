@@ -97,6 +97,7 @@ The FastAPI/Jinja web application can run as a Vercel Python function. Vercel is
 4. Apply reviewed, versioned Alembic migrations before using database-backed features. The guarded GitHub workflow requires a repository Actions secret named `NEON_DATABASE_URL` containing the Neon **unpooled** connection string; then run **Actions → Migrate Neon database** and explicitly select `migrate`. It refuses to baseline an existing unversioned schema. If the Neon database may already contain tables, inspect them first.
 5. For emergency recovery only, `MIGRATE_DATABASE_ON_STARTUP=true` can temporarily apply pending Alembic revisions using the configured managed PostgreSQL URL. This setting is off by default, refuses an unversioned non-empty schema, and serializes concurrent startup attempts with a transaction-scoped lock. Disable it immediately after recovery; prefer the guarded GitHub workflow for routine deployments.
 6. Deploy a preview and verify sign-up, sign-in, DB connectivity, CSS and routes before promoting it to production.
+7. **Enable recurring monitor checks.** Vercel request functions do not run a permanent scheduler/worker. Set `CRON_SECRET` in the Vercel project to a random value of at least 32 characters. In GitHub repository Settings → Secrets and variables → Actions, add secret `CHANGEWATCH_CRON_SECRET` with the exact same value and variable `CHANGEWATCH_APP_URL` with the deployed public HTTPS origin. After this PR is merged to the default branch, `.github/workflows/monitor-scheduler.yml` calls the protected `/internal/worker/tick` endpoint every five minutes; each invocation schedules due monitors and processes at most one queued check. This prevents idle Pending jobs, but it is a low-volume fallback. For higher volume or short monitoring intervals, run the persistent `workers/scheduler_process.py` and `workers/check_worker.py` services on a container host.
 
 ### Remote Chromium for Vercel region preview
 
@@ -122,7 +123,6 @@ The app creates a short-lived Browserbase session, connects to it via Playwright
 
 The configured custom worker takes precedence over Browserbase. The browser worker validates the destination and continues applying the existing per-request SSRF protections before returning the DOM. Use HTTPS, keep the token secret, and rotate it if it is exposed. Do not use the local development token from `.env.example` on a public service.
 
-For local Docker development, `docker compose up --build` starts a separate `browser-api` service and routes region-preview captures through it. The normal monitor create/check-now actions enqueue jobs; a persistent queue worker must also be running to process scheduled monitor checks.
 For local Docker development, `docker compose up --build` starts a separate `browser-api` service and routes region-preview captures through it. The normal monitor create/check-now actions enqueue jobs; a persistent queue worker must also be running to process scheduled monitor checks.
 
 ## Docker Compose: PostgreSQL + web + scheduler + Chromium worker
