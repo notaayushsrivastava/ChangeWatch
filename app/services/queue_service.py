@@ -48,7 +48,7 @@ def enqueue_check(db: Session, monitor_id: str, is_manual: bool = False) -> Opti
     return job
 
 
-async def process_check_job(db: Session, job: QueueJob, allow_test_fixtures: bool = False) -> bool:
+async def _process_check_job_impl(db: Session, job: QueueJob, allow_test_fixtures: bool = False) -> bool:
     """Executes a single check_monitor queue job."""
     payload = job.payload
     monitor_id = payload.get("monitor_id")
@@ -60,10 +60,16 @@ async def process_check_job(db: Session, job: QueueJob, allow_test_fixtures: boo
         db.commit()
         return True
 
-    # Mark job running
+    # Publish progress to the UI before spending time in browser capture.
+    # Without this state, an executing first check still looks permanently Pending.
+    now_started = datetime.now(timezone.utc)
     job.status = "running"
-    job.locked_at = datetime.now(timezone.utc)
+    job.locked_at = now_started
+    job.locked_by = job.locked_by or "inline-worker"
     job.attempts += 1
+    monitor.last_status = "running"
+    monitor.last_error_code = None
+    monitor.last_error_message = None
     db.commit()
 
     # Create CheckRun record
@@ -101,7 +107,24 @@ async def process_check_job(db: Session, job: QueueJob, allow_test_fixtures: boo
         monitor.last_error_message = result.error_message
         monitor.last_checked_at = datetime.now(timezone.utc)
 
-        job.status = "failed" if job.attempts >= job.max_attempts else "pending"
+        # Configuration/authentication failures won't heal with retries. Other
+        # capture failures receive bounded exponential backoff instead of a hot loop.
+        terminal_failures = {
+            "BROWSER_WORKER_UNCONFIGURED",
+            "BROWSER_WORKER_AUTH_FAILED",
+        }
+        can_retry = job.attempts < job.max_attempts and result.failure_code not in terminal_failures
+        now_failed = datetime.now(timezone.utc)
+        if can_retry:
+            job.status = "pending"
+            job.scheduled_at = now_failed + timedelta(seconds=min(300, 5 * (2 ** (job.attempts - 1))))
+            monitor.last_status = "pending"
+        else:
+            job.status = "failed"
+            job.completed_at = now_failed
+            monitor.last_status = check_run.status
+        job.locked_at = None
+        job.locked_by = None
         job.error_message = result.error_message
         db.commit()
         return False
@@ -249,5 +272,61 @@ async def process_check_job(db: Session, job: QueueJob, allow_test_fixtures: boo
 
     job.status = "completed"
     job.completed_at = now
+    job.locked_at = None
+    job.locked_by = None
+    job.error_message = None
     db.commit()
     return True
+
+
+
+async def process_check_job(db: Session, job: QueueJob, allow_test_fixtures: bool = False) -> bool:
+    """Run one queue job and ensure unexpected exceptions cannot leave it stuck running."""
+    job_id = job.id
+    try:
+        return await _process_check_job_impl(db, job, allow_test_fixtures=allow_test_fixtures)
+    except Exception as exc:
+        logger.exception("Unexpected exception processing monitor job %s", job_id)
+        db.rollback()
+        fresh_job = db.query(QueueJob).filter(QueueJob.id == job_id).first()
+        if fresh_job is None:
+            return False
+
+        now = datetime.now(timezone.utc)
+        monitor_id = fresh_job.payload.get("monitor_id")
+        monitor = db.query(Monitor).filter(Monitor.id == monitor_id).first()
+        running_run = (
+            db.query(CheckRun)
+            .filter(CheckRun.monitor_id == monitor_id, CheckRun.status == "running")
+            .order_by(CheckRun.started_at.desc())
+            .first()
+        )
+        safe_message = "The check stopped unexpectedly. Review worker logs for details."
+        if running_run:
+            running_run.status = "error"
+            running_run.finished_at = now
+            running_run.failure_code = "WORKER_EXCEPTION"
+            running_run.safe_error_message = safe_message
+
+        retryable = fresh_job.attempts < fresh_job.max_attempts
+        if retryable:
+            fresh_job.status = "pending"
+            fresh_job.scheduled_at = now + timedelta(seconds=min(300, 5 * (2 ** max(0, fresh_job.attempts - 1))))
+            fresh_job.error_message = safe_message
+            if monitor:
+                monitor.last_status = "pending"
+                monitor.last_error_code = "WORKER_EXCEPTION"
+                monitor.last_error_message = safe_message
+        else:
+            fresh_job.status = "failed"
+            fresh_job.completed_at = now
+            fresh_job.error_message = safe_message
+            if monitor:
+                monitor.last_status = "error"
+                monitor.last_error_code = "WORKER_EXCEPTION"
+                monitor.last_error_message = safe_message
+                monitor.last_checked_at = now
+        fresh_job.locked_at = None
+        fresh_job.locked_by = None
+        db.commit()
+        return False
