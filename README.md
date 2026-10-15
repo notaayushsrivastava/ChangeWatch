@@ -80,6 +80,54 @@ In production, run the components as independent processes:
    ```
 
 ---
+## Vercel deployment (web runtime)
+
+The FastAPI/Jinja web application can run as a Vercel Python function. Vercel is **not** the scheduler or browser worker host: functions can be archived, their writable filesystem is temporary, and the app must not start perpetual worker loops in a request runtime.
+
+1. Import this repository at https://vercel.com/new.
+2. Use the repository root as the project root; `pyproject.toml` points Vercel to `app.main:app` and builds the Tailwind CSS.
+3. Configure these production environment variables in Vercel before using authenticated features:
+   - `APP_ENV=production`
+   - `APP_BASE_URL=https://your-deployment-domain`
+   - `APP_SECRET_KEY` (unique random value, at least 32 characters)
+   - `DATABASE_URL` (managed PostgreSQL using the `postgresql+psycopg://` dialect)
+   - `ARTIFACT_STORAGE_BACKEND=s3`, `S3_BUCKET`, `S3_REGION`, and `S3_PREFIX`; configure `S3_ENDPOINT_URL` for S3-compatible providers and credentials/identity as required
+   - `ENCRYPTION_KEY` (a freshly generated Fernet key)
+   - production email provider settings if outbound mail alerts are required
+4. Apply the blank-database schema bootstrap once using the procedure below. Never run schema creation on every serverless import.
+5. Deploy a preview and verify login, DB connectivity, CSS and routes before promoting it to production.
+
+The region-picker endpoint that directly invokes Chromium returns an explicit 503 on Vercel until a remote browser-worker endpoint is wired in. The normal monitor create/check-now actions enqueue jobs; a persistent worker must be running to process them.
+
+## Docker Compose: PostgreSQL + web + scheduler + Chromium worker
+
+For a local full-stack environment, copy `.env.example` to `.env` and then run:
+
+```bash
+docker compose up --build
+```
+
+The Compose stack starts PostgreSQL, an API web process, a separate scheduler, and a Playwright Chromium worker. PostgreSQL and local artifact files use named volumes. Visit http://localhost:8000. The web process does not run the inline scheduler or Chromium checks.
+
+To initialize a new database explicitly:
+
+```bash
+docker compose run --rm init-db
+```
+
+This bootstrap is intended for a **blank database only**. For schema changes after the first deployment, create and apply reviewed versioned migrations; do not treat `create_all` as a migration mechanism.
+
+The Docker image uses the Playwright Python base image, so browser binaries and OS dependencies are supplied by the worker image. In a split deployment, run the scheduler/worker containers with the same `DATABASE_URL` and object-store settings as Vercel. Do not point them at the Docker Compose database unless that database is deliberately exposed through a secure private network.
+
+## Required production limitations
+
+- PostgreSQL and object storage are external production dependencies; they are intentionally not provisioned by Vercel project creation.
+- Vercel production startup rejects development secrets, SQLite, localhost base URLs, or non-durable artifact storage.
+- A permanent scheduler and browser worker must run in a persistent container environment. Do not run `workers/scheduler_process.py` or `workers/check_worker.py` as Vercel request functions.
+- Region picker/browser preview requires the local/Docker runtime today; expose a restricted remote browser-worker endpoint before enabling that feature on Vercel.
+- Playwright navigation must continue to use the existing public-URL/SSRF defenses. Do not expose the worker as an unrestricted URL-fetching public API.
+
+---
 
 ## Running Tests
 
