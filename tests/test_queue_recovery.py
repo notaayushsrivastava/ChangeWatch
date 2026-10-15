@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 import pytest
+from sqlalchemy.orm import Session
 
 from app.models.monitor import Monitor
 from app.models.queue_job import QueueJob
@@ -74,25 +75,35 @@ async def test_text_baseline_succeeds_if_optional_screenshot_storage_fails(db_se
 
 @pytest.mark.asyncio
 async def test_unexpected_capture_exception_requeues_job_instead_of_leaving_running(db_session, monkeypatch):
-    monitor, job = create_monitor_job(db_session, "queue-exception@example.invalid")
+    # Use a savepoint session so the processor's deliberate rollback on an
+    # exception doesn't roll back the fixture's outer transaction.
+    session = Session(bind=db_session.connection(), join_transaction_mode="create_savepoint")
+    try:
+        monitor, job = create_monitor_job(session, "queue-exception@example.invalid")
 
-    async def broken_capture(**kwargs):
-        raise RuntimeError("simulated browser crash")
+        async def broken_capture(**kwargs):
+            raise RuntimeError("simulated browser crash")
 
-    monkeypatch.setattr(browser_capture_service, "capture_page", broken_capture)
-    monkeypatch.delenv("VERCEL", raising=False)
+        monkeypatch.setattr(browser_capture_service, "capture_page", broken_capture)
+        monkeypatch.delenv("VERCEL", raising=False)
 
-    succeeded = await process_check_job(db_session, job)
+        succeeded = await process_check_job(session, job)
 
-    db_session.refresh(monitor)
-    db_session.refresh(job)
-    check_run = db_session.query(CheckRun).filter(CheckRun.monitor_id == monitor.id).one()
+        session.refresh(monitor)
+        session.refresh(job)
+        check_run = session.query(CheckRun).filter(CheckRun.monitor_id == monitor.id).one()
 
-    assert succeeded is False
-    assert job.status == "pending"
-    assert job.locked_at is None
-    assert job.scheduled_at > datetime.now(timezone.utc)
-    assert monitor.last_status == "pending"
-    assert monitor.last_error_code == "WORKER_EXCEPTION"
-    assert check_run.status == "error"
-    assert check_run.failure_code == "WORKER_EXCEPTION"
+        scheduled_at = job.scheduled_at
+        if scheduled_at.tzinfo is None:
+            scheduled_at = scheduled_at.replace(tzinfo=timezone.utc)
+
+        assert succeeded is False
+        assert job.status == "pending"
+        assert job.locked_at is None
+        assert scheduled_at > datetime.now(timezone.utc)
+        assert monitor.last_status == "pending"
+        assert monitor.last_error_code == "WORKER_EXCEPTION"
+        assert check_run.status == "error"
+        assert check_run.failure_code == "WORKER_EXCEPTION"
+    finally:
+        session.close()
