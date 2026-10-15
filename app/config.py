@@ -41,6 +41,13 @@ class Settings(BaseSettings):
     BROWSER_STABILIZATION_MS: int = 1500
     BROWSER_MAX_PAGE_HEIGHT: int = 8000
 
+    # Remote Chromium API for serverless web runtimes such as Vercel.
+    # Set on the web app to the worker service's public base URL; set the same
+    # high-entropy token on both the web app and worker deployment.
+    BROWSER_WORKER_URL: str = ""
+    BROWSER_WORKER_TOKEN: str = ""
+    BROWSER_WORKER_TIMEOUT_SECONDS: int = 45
+
     EMAIL_PROVIDER: str = "console"  # console, smtp, resend
     EMAIL_FROM: str = "alerts@changewatch.local"
     SMTP_HOST: str = "localhost"
@@ -108,6 +115,14 @@ class Settings(BaseSettings):
             problems.append("Set ARTIFACT_STORAGE_BACKEND=s3 and configure S3_BUCKET for durable artifacts")
         if self.APP_BASE_URL.startswith("http://localhost"):
             problems.append("APP_BASE_URL must be the public HTTPS application URL")
+        if self.is_vercel:
+            worker_url = self.BROWSER_WORKER_URL.strip()
+            if not worker_url:
+                problems.append("Configure BROWSER_WORKER_URL to enable Chromium-based region preview and remote browser capture")
+            elif not worker_url.startswith("https://"):
+                problems.append("BROWSER_WORKER_URL must be an HTTPS URL in Vercel")
+            if len(self.BROWSER_WORKER_TOKEN) < 32:
+                problems.append("BROWSER_WORKER_TOKEN must be a unique random secret of at least 32 characters")
         if problems:
             raise RuntimeError("Invalid production configuration: " + "; ".join(problems))
 
