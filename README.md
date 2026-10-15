@@ -91,7 +91,7 @@ The FastAPI/Jinja web application can run as a Vercel Python function. Vercel is
    - `APP_BASE_URL=https://your-deployment-domain`
    - `APP_SECRET_KEY` (unique random value, at least 32 characters)
    - `DATABASE_URL` (managed PostgreSQL; Neon’s pooled `postgresql://` URL is supported and normalized to `postgresql+psycopg://` for SQLAlchemy/psycopg 3)
-   - `ARTIFACT_STORAGE_BACKEND=s3`, `S3_BUCKET`, `S3_REGION`, and `S3_PREFIX`; configure `S3_ENDPOINT_URL` for S3-compatible providers and credentials/identity as required
+   - Optional screenshot history: `ARTIFACT_STORAGE_BACKEND=s3`, `S3_BUCKET`, `S3_REGION`, and `S3_PREFIX`; configure `S3_ENDPOINT_URL` for S3-compatible providers and credentials/identity as required. Without a bucket, text monitoring and version comparisons still work; screenshot links and visual diffs are omitted.
    - `ENCRYPTION_KEY` (a freshly generated Fernet key)
    - production email provider settings if outbound mail alerts are required
 4. Apply reviewed, versioned Alembic migrations before using database-backed features. The guarded GitHub workflow requires a repository Actions secret named `NEON_DATABASE_URL` containing the Neon **unpooled** connection string; then run **Actions → Migrate Neon database** and explicitly select `migrate`. It refuses to baseline an existing unversioned schema. If the Neon database may already contain tables, inspect them first.
@@ -147,10 +147,10 @@ The Docker image uses the Playwright Python base image, so browser binaries and 
 
 ## Required production limitations
 
-- PostgreSQL and object storage are external production dependencies; they are intentionally not provisioned by Vercel project creation.
-- Vercel production startup rejects development secrets, SQLite, localhost base URLs, or non-durable artifact storage. Preview deployments can render the landing/auth pages without production resources, but database-dependent account and monitoring actions require the PostgreSQL/S3 variables above.
-- A permanent scheduler and browser worker must run in a persistent container environment. Do not run `workers/scheduler_process.py` or `workers/check_worker.py` as Vercel request functions.
-- Region picker/browser preview requires the local/Docker runtime today; expose a restricted remote browser-worker endpoint before enabling that feature on Vercel.
+- Managed PostgreSQL is required for durable accounts and monitor data. Vercel production startup rejects development secrets, SQLite, and localhost base URLs.
+- Object storage is optional for monitoring: without an S3 bucket, ChangeWatch saves normalized text baselines and detects changes but skips screenshot history and visual diffs.
+- The first check is executed during monitor creation on Vercel so it does not wait forever in the queue. The included GitHub Actions scheduler ticks every five minutes after the PR is merged and configured; each tick processes at most one queued check. This is a low-volume fallback. For many watches or shorter intervals, run `workers/scheduler_process.py` and `workers/check_worker.py` as persistent container processes.
+- Region preview and Chromium-based captures require either Browserbase credentials or the authenticated remote browser worker described above. Vercel request functions do not launch local Chromium.
 - Playwright navigation must continue to use the existing public-URL/SSRF defenses. Do not expose the worker as an unrestricted URL-fetching public API.
 
 ---
@@ -167,6 +167,7 @@ Test coverage includes:
 - `tests/test_normalizer.py`: Volatile timestamp/counter noise suppression, sensitivity thresholds, SHA-256 stability.
 - `tests/test_diff_engine.py`: Text diff generation and Pillow visual diff mask calculation.
 - `tests/test_monitors_api.py`: User isolation, CSRF protection, and monitor state transitions.
+- `tests/test_scheduler_service.py` and `tests/test_worker_tick.py`: Due-check enqueueing, stale queue recovery, scheduler authentication, and processing failures.
 - `tests/test_e2e_flow.py`: Full check lifecycle (baseline creation, unchanged check filtering, and change detection with alert dispatch).
 
 ---
