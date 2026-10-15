@@ -34,7 +34,7 @@ _scheduler_task = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Validate production configuration before touching the database or artifact store.
-    if settings.is_production or settings.is_vercel:
+    if settings.is_production:
         settings.validate_production_config()
 
     # Vercel's function filesystem is not durable; S3-compatible object storage
