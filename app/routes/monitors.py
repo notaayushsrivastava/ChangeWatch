@@ -229,7 +229,11 @@ async def check_now_action(
         raise HTTPException(status_code=404, detail="Monitor not found")
 
     job = enqueue_check(db, monitor.id, is_manual=True)
-    if job and (settings.run_inline_checks or settings.is_vercel):
+    if job and job.status == "pending" and (settings.run_inline_checks or settings.is_vercel):
+        # A manual request may run a waiting job immediately, but must never race
+        # a job that another worker has already claimed.
+        job.scheduled_at = __import__("datetime").datetime.now(__import__("datetime").timezone.utc)
+        db.commit()
         await process_check_job(db, job)
 
     return RedirectResponse(url=f"/monitors/{monitor.id}", status_code=status.HTTP_303_SEE_OTHER)
