@@ -1,3 +1,4 @@
+import html as html_lib
 import json
 import re
 from typing import Optional
@@ -359,30 +360,33 @@ async def preview_dom_endpoint(
     if not monitor:
         raise HTTPException(status_code=404, detail="Monitor not found")
 
-    # The Vercel web function does not ship Chromium; region preview is handled
-    # by the persistent browser-worker deployment, not the request function.
-    if settings.is_vercel:
-        return HTMLResponse(
-            "<html><body style='font-family:sans-serif;padding:2rem'>"
-            "<h3>Region preview is unavailable on the serverless web runtime.</h3>"
-            "<p>Use the Docker-backed development app or configure a remote browser-worker endpoint.</p>"
-            "</body></html>",
-            status_code=503,
-        )
-
-    # Fetch live page snapshot
+    # Vercel functions do not ship Chromium. browser_capture_service forwards
+    # this request to the configured authenticated worker; local development can
+    # continue to launch Chromium directly.
     capture = await browser_capture_service.capture_page(
         url=monitor.url,
-        capture_dom=True
+        capture_dom=True,
     )
 
     if not capture.success:
-        return HTMLResponse(f"""
-            <html><body style="font-family:sans-serif;padding:2rem;color:#e11d48;background:#fff1f2;">
-            <h3>Unable to load preview</h3>
-            <p>{capture.error_message or capture.failure_code}</p>
-            </body></html>
-        """, status_code=200)
+        if capture.failure_code == "BROWSER_WORKER_UNCONFIGURED":
+            error_status = 503
+            error_message = (
+                "Remote Chromium is not configured for this deployment. "
+                "Deploy the browser-worker container and set BROWSER_WORKER_URL "
+                "and BROWSER_WORKER_TOKEN in Vercel."
+            )
+        else:
+            error_status = 502
+            error_message = capture.error_message or capture.failure_code or "Unknown capture error"
+        safe_error = html_lib.escape(error_message)
+        return HTMLResponse(
+            "<html><body style='font-family:sans-serif;padding:2rem;color:#e11d48;background:#fff1f2;'>"
+            "<h3>Unable to load preview</h3>"
+            f"<p>{safe_error}</p>"
+            "</body></html>",
+            status_code=error_status,
+        )
 
     html = capture.dom_html or "<html><body>Empty page</body></html>"
 
