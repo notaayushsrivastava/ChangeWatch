@@ -1,6 +1,8 @@
 import asyncio
+import base64
 import sys
 import time
+import httpx
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page, Route, Request
@@ -24,6 +26,100 @@ class CaptureResult:
 class BrowserCaptureService:
     def __init__(self):
         pass
+
+    async def _capture_via_worker(
+        self,
+        canonical_url: str,
+        include_selectors: List[str],
+        ignore_selectors: List[str],
+        numeric_selector: Optional[str],
+        capture_dom: bool,
+        start_time: float,
+    ) -> CaptureResult:
+        """Forward a validated capture to the authenticated remote Chromium service."""
+        worker_url = settings.BROWSER_WORKER_URL.strip().rstrip("/")
+        token = settings.BROWSER_WORKER_TOKEN.strip()
+        if not worker_url or len(token) < 32:
+            return CaptureResult(
+                success=False,
+                failure_code="BROWSER_WORKER_UNCONFIGURED",
+                error_message=(
+                    "Remote Chromium is not configured. Set BROWSER_WORKER_URL and "
+                    "the same random BROWSER_WORKER_TOKEN on Vercel and the browser-worker service."
+                ),
+                duration_ms=int((time.time() - start_time) * 1000),
+            )
+
+        payload = {
+            "url": canonical_url,
+            "include_selectors": include_selectors,
+            "ignore_selectors": ignore_selectors,
+            "numeric_selector": numeric_selector,
+            "capture_dom": capture_dom,
+        }
+        timeout_seconds = max(5, min(settings.BROWSER_WORKER_TIMEOUT_SECONDS, 55))
+        timeout = httpx.Timeout(timeout_seconds, connect=min(8, timeout_seconds))
+        try:
+            async with httpx.AsyncClient(timeout=timeout, follow_redirects=False) as client:
+                response = await client.post(
+                    f"{worker_url}/internal/capture",
+                    headers={"Authorization": f"Bearer {token}"},
+                    json=payload,
+                )
+            if response.status_code in (401, 403):
+                return CaptureResult(
+                    success=False,
+                    failure_code="BROWSER_WORKER_AUTH_FAILED",
+                    error_message="The remote browser worker rejected its shared authentication token.",
+                    duration_ms=int((time.time() - start_time) * 1000),
+                )
+            response.raise_for_status()
+            data = response.json()
+            screenshot = data.get("screenshot_base64") or ""
+            try:
+                screenshot_bytes = base64.b64decode(screenshot, validate=True) if screenshot else b""
+            except (ValueError, TypeError):
+                return CaptureResult(
+                    success=False,
+                    failure_code="BROWSER_WORKER_INVALID_RESPONSE",
+                    error_message="The remote browser worker returned an invalid screenshot payload.",
+                    duration_ms=int((time.time() - start_time) * 1000),
+                )
+            return CaptureResult(
+                success=bool(data.get("success", False)),
+                raw_text=str(data.get("raw_text") or ""),
+                screenshot_bytes=screenshot_bytes,
+                dom_html=str(data.get("dom_html") or ""),
+                http_status=data.get("http_status"),
+                duration_ms=int(data.get("duration_ms") or (time.time() - start_time) * 1000),
+                failure_code=data.get("failure_code"),
+                error_message=data.get("error_message"),
+                metadata={
+                    **(data.get("metadata") if isinstance(data.get("metadata"), dict) else {}),
+                    "execution": "remote-browser-worker",
+                },
+            )
+        except httpx.TimeoutException:
+            return CaptureResult(
+                success=False,
+                failure_code="BROWSER_WORKER_TIMEOUT",
+                error_message="The remote browser worker timed out. Retry the preview.",
+                duration_ms=int((time.time() - start_time) * 1000),
+            )
+        except httpx.HTTPStatusError as exc:
+            return CaptureResult(
+                success=False,
+                failure_code="BROWSER_WORKER_HTTP_ERROR",
+                error_message=f"The remote browser worker returned HTTP {exc.response.status_code}.",
+                duration_ms=int((time.time() - start_time) * 1000),
+            )
+        except (httpx.HTTPError, ValueError):
+            return CaptureResult(
+                success=False,
+                failure_code="BROWSER_WORKER_UNAVAILABLE",
+                error_message="The remote browser worker could not be reached or returned an invalid response.",
+                duration_ms=int((time.time() - start_time) * 1000),
+            )
 
     async def _capture_page_async(
         self,
@@ -156,17 +252,19 @@ class BrowserCaptureService:
                         except Exception:
                             pass
 
-                    # Capture full-page screenshot bounded by max height
+                    # The visual region picker only needs HTML. Avoid capturing and
+                    # transferring a large PNG when DOM-only mode is requested.
                     screenshot_bytes = b""
-                    try:
-                        screenshot_bytes = await page.screenshot(
-                            full_page=True,
-                            type="png",
-                            timeout=15000,
-                        )
-                    except Exception:
-                        # Fallback to viewport screenshot
-                        screenshot_bytes = await page.screenshot(type="png")
+                    if not capture_dom:
+                        try:
+                            screenshot_bytes = await page.screenshot(
+                                full_page=True,
+                                type="png",
+                                timeout=15000,
+                            )
+                        except Exception:
+                            # Fallback to viewport screenshot
+                            screenshot_bytes = await page.screenshot(type="png")
 
                     await context.close()
 
@@ -240,6 +338,7 @@ class BrowserCaptureService:
         numeric_selector: Optional[str] = None,
         capture_dom: bool = False,
         allow_test_fixtures: bool = False,
+        local_only: bool = False,
     ) -> CaptureResult:
         start_time = time.time()
 
@@ -255,6 +354,29 @@ class BrowserCaptureService:
 
         include_selectors = include_selectors or []
         ignore_selectors = ignore_selectors or []
+
+        # Vercel request functions do not launch Chromium locally. Forward all
+        # browser work to the persistent worker when configured; fail quickly and
+        # clearly if the deployment has not been connected to one yet.
+        if not local_only and settings.BROWSER_WORKER_URL.strip():
+            return await self._capture_via_worker(
+                canonical_url=canonical_url,
+                include_selectors=include_selectors,
+                ignore_selectors=ignore_selectors,
+                numeric_selector=numeric_selector,
+                capture_dom=capture_dom,
+                start_time=start_time,
+            )
+        if not local_only and settings.is_vercel:
+            return CaptureResult(
+                success=False,
+                failure_code="BROWSER_WORKER_UNCONFIGURED",
+                error_message=(
+                    "Remote Chromium is not configured. Set BROWSER_WORKER_URL and "
+                    "the same random BROWSER_WORKER_TOKEN on Vercel and the browser-worker service."
+                ),
+                duration_ms=int((time.time() - start_time) * 1000),
+            )
 
         # Step 2: Event Loop Compatibility check on Windows
         # If current loop does not support subprocesses (e.g. SelectorEventLoop under uvicorn --reload),
