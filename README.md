@@ -122,7 +122,7 @@ The Docker image uses the Playwright Python base image, so browser binaries and 
 ## Required production limitations
 
 - PostgreSQL and object storage are external production dependencies; they are intentionally not provisioned by Vercel project creation.
-- Vercel production startup rejects development secrets, SQLite, localhost base URLs, or non-durable artifact storage.
+- Vercel production startup rejects development secrets, SQLite, localhost base URLs, or non-durable artifact storage. Preview deployments can render the landing/auth pages without production resources, but database-dependent account and monitoring actions require the PostgreSQL/S3 variables above.
 - A permanent scheduler and browser worker must run in a persistent container environment. Do not run `workers/scheduler_process.py` or `workers/check_worker.py` as Vercel request functions.
 - Region picker/browser preview requires the local/Docker runtime today; expose a restricted remote browser-worker endpoint before enabling that feature on Vercel.
 - Playwright navigation must continue to use the existing public-URL/SSRF defenses. Do not expose the worker as an unrestricted URL-fetching public API.
