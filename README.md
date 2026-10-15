@@ -94,7 +94,7 @@ The FastAPI/Jinja web application can run as a Vercel Python function. Vercel is
    - `ARTIFACT_STORAGE_BACKEND=s3`, `S3_BUCKET`, `S3_REGION`, and `S3_PREFIX`; configure `S3_ENDPOINT_URL` for S3-compatible providers and credentials/identity as required
    - `ENCRYPTION_KEY` (a freshly generated Fernet key)
    - production email provider settings if outbound mail alerts are required
-4. Apply the blank-database schema bootstrap once using the procedure below. Never run schema creation on every serverless import.
+4. Initialize a new database once from a trusted environment with `python -m scripts.init_db` after setting `DATABASE_URL`. This bootstrap creates missing tables but is not a migration system; use reviewed versioned migrations for subsequent schema changes.
 5. Deploy a preview and verify login, DB connectivity, CSS and routes before promoting it to production.
 
 The region-picker endpoint that directly invokes Chromium returns an explicit 503 on Vercel until a remote browser-worker endpoint is wired in. The normal monitor create/check-now actions enqueue jobs; a persistent worker must be running to process them.
@@ -109,13 +109,13 @@ docker compose up --build
 
 The Compose stack starts PostgreSQL, an API web process, a separate scheduler, and a Playwright Chromium worker. PostgreSQL and local artifact files use named volumes. Visit http://localhost:8000. The web process does not run the inline scheduler or Chromium checks.
 
-To initialize a new database explicitly:
+The `init-db` one-shot service runs automatically after Postgres is healthy and before the other services start. To rerun it against a deliberately blank local database, use:
 
 ```bash
 docker compose run --rm init-db
 ```
 
-This bootstrap is intended for a **blank database only**. For schema changes after the first deployment, create and apply reviewed versioned migrations; do not treat `create_all` as a migration mechanism.
+This bootstrap creates tables that do not yet exist and is intended for initial setup, not schema evolution. It is not a versioned migration system; create and apply reviewed migrations for subsequent schema changes rather than treating `create_all` as a migration mechanism.
 
 The Docker image uses the Playwright Python base image, so browser binaries and OS dependencies are supplied by the worker image. In a split deployment, run the scheduler/worker containers with the same `DATABASE_URL` and object-store settings as Vercel. Do not point them at the Docker Compose database unless that database is deliberately exposed through a secure private network.
 
