@@ -23,6 +23,35 @@ from app.services.notifier import dispatch_alert_event
 logger = logging.getLogger("changewatch.queue")
 
 
+def _try_save_screenshot(image_bytes: bytes, monitor_id: str, version_id: str) -> Optional[str]:
+    """Persist screenshots when durable storage is configured; text monitoring must survive otherwise."""
+    if not image_bytes:
+        return None
+    if settings.is_vercel and (
+        settings.artifact_backend != "s3" or not settings.S3_BUCKET.strip()
+    ):
+        logger.warning(
+            "Skipping screenshot for monitor %s: configure S3_BUCKET for durable screenshot history",
+            monitor_id,
+        )
+        return None
+    try:
+        return artifact_storage.save_screenshot(image_bytes, monitor_id, version_id)
+    except Exception:
+        # Browser capture and text diffing are the core monitor function; an
+        # optional screenshot-storage outage must not leave a monitor uninitialized.
+        logger.exception("Could not persist screenshot for monitor %s; continuing text-only", monitor_id)
+        return None
+
+
+def _try_read_screenshot(filename: str) -> Optional[bytes]:
+    try:
+        return artifact_storage.read_bytes(filename)
+    except Exception:
+        logger.exception("Could not read prior screenshot artifact; skipping visual diff")
+        return None
+
+
 def enqueue_check(db: Session, monitor_id: str, is_manual: bool = False) -> Optional[QueueJob]:
     """
     Enqueues a monitor check job. Coalesces duplicate jobs if a check is already pending or running.
@@ -166,7 +195,7 @@ async def _process_check_job_impl(db: Session, job: QueueJob, allow_test_fixture
     if last_version is None:
         # Initial baseline snapshot
         version_id = str(uuid.uuid4())
-        screenshot_key = artifact_storage.save_screenshot(result.screenshot_bytes, monitor.id, version_id)
+        screenshot_key = _try_save_screenshot(result.screenshot_bytes, monitor.id, version_id)
 
         version = Version(
             id=version_id,
@@ -232,7 +261,7 @@ async def _process_check_job_impl(db: Session, job: QueueJob, allow_test_fixture
 
         # Precompute visual diff image if previous screenshot exists
         if last_version.screenshot_artifact_key:
-            prev_bytes = artifact_storage.read_bytes(last_version.screenshot_artifact_key)
+            prev_bytes = _try_read_screenshot(last_version.screenshot_artifact_key)
             if prev_bytes:
                 try:
                     diff_png, _ = generate_visual_diff(prev_bytes, result.screenshot_bytes)
