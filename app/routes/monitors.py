@@ -6,6 +6,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.db import get_db
+from app.config import settings
 from app.models.user import User
 from app.models.monitor import Monitor
 from app.models.version import Version
@@ -94,8 +95,9 @@ async def create_monitor_action(
 
     # Enqueue initial baseline check
     job = enqueue_check(db, monitor.id, is_manual=True)
-    if job:
-        # Process baseline check immediately
+    if job and settings.run_inline_checks:
+        # Preserve the convenient single-process local flow. Production/Vercel
+        # only enqueue; the dedicated persistent worker performs Chromium work.
         try:
             await process_check_job(db, job)
         except Exception:
@@ -227,7 +229,7 @@ async def check_now_action(
         raise HTTPException(status_code=404, detail="Monitor not found")
 
     job = enqueue_check(db, monitor.id, is_manual=True)
-    if job:
+    if job and settings.run_inline_checks:
         await process_check_job(db, job)
 
     return RedirectResponse(url=f"/monitors/{monitor.id}", status_code=status.HTTP_303_SEE_OTHER)
@@ -356,6 +358,17 @@ async def preview_dom_endpoint(
     monitor = db.query(Monitor).filter(Monitor.id == monitor_id, Monitor.user_id == current_user.id).first()
     if not monitor:
         raise HTTPException(status_code=404, detail="Monitor not found")
+
+    # The Vercel web function does not ship Chromium; region preview is handled
+    # by the persistent browser-worker deployment, not the request function.
+    if settings.is_vercel:
+        return HTMLResponse(
+            "<html><body style='font-family:sans-serif;padding:2rem'>"
+            "<h3>Region preview is unavailable on the serverless web runtime.</h3>"
+            "<p>Use the Docker-backed development app or configure a remote browser-worker endpoint.</p>"
+            "</body></html>",
+            status_code=503,
+        )
 
     # Fetch live page snapshot
     capture = await browser_capture_service.capture_page(
