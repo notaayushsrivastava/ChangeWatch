@@ -1,11 +1,16 @@
+import logging
+
 from fastapi import APIRouter, Request, Depends, Form, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models.user import User
 from app.services.security import hash_password, verify_password, create_session_token
 from app.dependencies import get_current_user_optional, get_or_create_csrf_token, validate_csrf
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth")
 templates = Jinja2Templates(directory="app/templates")
@@ -57,6 +62,7 @@ async def login_action(
         httponly=True,
         max_age=86400 * 14,
         samesite="lax",
+        secure=request.url.scheme == "https",
     )
     return response
 
@@ -95,6 +101,7 @@ async def signup_action(
         return templates.TemplateResponse(request, "auth/signup.html", {
             "current_user": None,
             "csrf_token": get_or_create_csrf_token(request),
+            "email": email_clean,
             "error": "Please provide a valid email address.",
         }, status_code=400)
 
@@ -102,27 +109,61 @@ async def signup_action(
         return templates.TemplateResponse(request, "auth/signup.html", {
             "current_user": None,
             "csrf_token": get_or_create_csrf_token(request),
+            "email": email_clean,
             "error": "Password must be at least 8 characters long.",
         }, status_code=400)
 
-    existing = db.query(User).filter(User.email == email_clean).first()
-    if existing:
+    # bcrypt 5.x rejects passwords longer than 72 UTF-8 bytes. Reject explicitly
+    # here so signup returns a useful form error instead of an unhandled 500.
+    if len(password.encode("utf-8")) > 72:
         return templates.TemplateResponse(request, "auth/signup.html", {
             "current_user": None,
             "csrf_token": get_or_create_csrf_token(request),
-            "error": "An account with that email already exists.",
+            "email": email_clean,
+            "error": "Password must be no more than 72 UTF-8 bytes long.",
         }, status_code=400)
 
-    new_user = User(
-        email=email_clean,
-        password_hash=hash_password(password),
-        timezone=timezone or "UTC",
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    try:
+        existing = db.query(User).filter(User.email == email_clean).first()
+        if existing:
+            return templates.TemplateResponse(request, "auth/signup.html", {
+                "current_user": None,
+                "csrf_token": get_or_create_csrf_token(request),
+                "email": email_clean,
+                "error": "An account with that email already exists.",
+            }, status_code=400)
 
-    session_token = create_session_token(new_user.id)
+        new_user = User(
+            email=email_clean,
+            password_hash=hash_password(password),
+            timezone=timezone or "UTC",
+        )
+        db.add(new_user)
+        # Force INSERT now so uniqueness/constraint errors are handled below.
+        db.flush()
+        user_id = new_user.id
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        # A concurrent signup may have inserted this email after the initial query.
+        return templates.TemplateResponse(request, "auth/signup.html", {
+            "current_user": None,
+            "csrf_token": get_or_create_csrf_token(request),
+            "email": email_clean,
+            "error": "An account with that email already exists. Please sign in instead.",
+        }, status_code=400)
+    except SQLAlchemyError as exc:
+        db.rollback()
+        # Avoid including an email, SQL parameters, or credentials in application logs.
+        logger.error("Signup database operation failed (%s)", type(exc).__name__)
+        return templates.TemplateResponse(request, "auth/signup.html", {
+            "current_user": None,
+            "csrf_token": get_or_create_csrf_token(request),
+            "email": email_clean,
+            "error": "Account creation is temporarily unavailable. Please try again shortly.",
+        }, status_code=503)
+
+    session_token = create_session_token(user_id)
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(
         key="cw_session",
@@ -130,6 +171,7 @@ async def signup_action(
         httponly=True,
         max_age=86400 * 14,
         samesite="lax",
+        secure=request.url.scheme == "https",
     )
     return response
 
