@@ -44,8 +44,8 @@ class BrowserCaptureService:
                 success=False,
                 failure_code="BROWSER_WORKER_UNCONFIGURED",
                 error_message=(
-                    "Remote Chromium is not configured. Set BROWSER_WORKER_URL and "
-                    "the same random BROWSER_WORKER_TOKEN on Vercel and the browser-worker service."
+                    "Remote Chromium is not configured. Set either BROWSER_WORKER_URL and "
+                    "BROWSER_WORKER_TOKEN, or BROWSERBASE_API_KEY and BROWSERBASE_PROJECT_ID."
                 ),
                 duration_ms=int((time.time() - start_time) * 1000),
             )
@@ -121,6 +121,47 @@ class BrowserCaptureService:
                 duration_ms=int((time.time() - start_time) * 1000),
             )
 
+    async def _create_browserbase_session(self) -> tuple[str, str]:
+        """Create a short-lived managed Chromium session and return (id, CDP URL)."""
+        timeout_seconds = max(60, min(settings.BROWSERBASE_SESSION_TIMEOUT_SECONDS, 21600))
+        timeout = httpx.Timeout(15, connect=5)
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.post(
+                "https://api.browserbase.com/v1/sessions",
+                headers={
+                    "X-BB-API-Key": settings.BROWSERBASE_API_KEY.strip(),
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "projectId": settings.BROWSERBASE_PROJECT_ID.strip(),
+                    "timeout": timeout_seconds,
+                },
+            )
+        response.raise_for_status()
+        session = response.json()
+        session_id = session.get("id")
+        connect_url = session.get("connectUrl")
+        if not isinstance(session_id, str) or not isinstance(connect_url, str):
+            raise ValueError("Browserbase did not return a session id and CDP URL.")
+        return session_id, connect_url
+
+    async def _release_browserbase_session(self, session_id: str) -> None:
+        """Release a managed session even if navigation or capture failed."""
+        try:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(8, connect=4)) as client:
+                await client.post(
+                    f"https://api.browserbase.com/v1/sessions/{session_id}",
+                    headers={
+                        "X-BB-API-Key": settings.BROWSERBASE_API_KEY.strip(),
+                        "Content-Type": "application/json",
+                    },
+                    json={"status": "REQUEST_RELEASE"},
+                )
+        except Exception:
+            # The platform also enforces the session timeout; cleanup errors must
+            # not hide the capture result or leak provider details to the UI.
+            pass
+
     async def _capture_page_async(
         self,
         canonical_url: str,
@@ -133,16 +174,23 @@ class BrowserCaptureService:
     ) -> CaptureResult:
         try:
             async with async_playwright() as p:
-                browser = await p.chromium.launch(
-                    headless=True,
-                    args=[
-                        "--no-sandbox",
-                        "--disable-setuid-sandbox",
-                        "--disable-dev-shm-usage",
-                        "--disable-gpu",
-                    ]
-                )
+                browser: Browser | None = None
+                browserbase_session_id: str | None = None
                 try:
+                    if settings.BROWSERBASE_API_KEY.strip() and settings.BROWSERBASE_PROJECT_ID.strip():
+                        browserbase_session_id, connect_url = await self._create_browserbase_session()
+                        browser = await p.chromium.connect_over_cdp(connect_url)
+                    else:
+                        browser = await p.chromium.launch(
+                            headless=True,
+                            args=[
+                                "--no-sandbox",
+                                "--disable-setuid-sandbox",
+                                "--disable-dev-shm-usage",
+                                "--disable-gpu",
+                            ],
+                        )
+
                     context = await browser.new_context(
                         viewport={"width": 1280, "height": 800},
                         user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 ChangeWatch/1.0",
@@ -284,13 +332,29 @@ class BrowserCaptureService:
                         }
                     )
                 finally:
-                    await browser.close()
+                    if browser is not None:
+                        try:
+                            await browser.close()
+                        except Exception:
+                            pass
+                    if browserbase_session_id:
+                        await self._release_browserbase_session(browserbase_session_id)
 
-        except Exception as e:
+        except Exception:
+            if settings.BROWSERBASE_API_KEY.strip() and settings.BROWSERBASE_PROJECT_ID.strip():
+                return CaptureResult(
+                    success=False,
+                    failure_code="BROWSERBASE_UNAVAILABLE",
+                    error_message=(
+                        "Could not start or connect to the managed Chromium session. "
+                        "Verify the Browserbase API key, project ID, and available session capacity."
+                    ),
+                    duration_ms=int((time.time() - start_time) * 1000),
+                )
             return CaptureResult(
                 success=False,
                 failure_code="BROWSER_ERROR",
-                error_message=str(e),
+                error_message="The local browser could not start or complete the capture.",
                 duration_ms=int((time.time() - start_time) * 1000),
             )
 
@@ -367,7 +431,10 @@ class BrowserCaptureService:
                 capture_dom=capture_dom,
                 start_time=start_time,
             )
-        if not local_only and settings.is_vercel:
+        browserbase_configured = bool(
+            settings.BROWSERBASE_API_KEY.strip() and settings.BROWSERBASE_PROJECT_ID.strip()
+        )
+        if not local_only and settings.is_vercel and not browserbase_configured:
             return CaptureResult(
                 success=False,
                 failure_code="BROWSER_WORKER_UNCONFIGURED",
