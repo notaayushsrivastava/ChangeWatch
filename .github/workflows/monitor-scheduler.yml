@@ -1,0 +1,48 @@
+name: ChangeWatch monitor scheduler
+
+on:
+  schedule:
+    # GitHub Actions runs the Vercel-compatible queue tick every five minutes.
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: changewatch-monitor-scheduler
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Trigger one scheduler/queue tick
+        env:
+          APP_URL: ${{ vars.CHANGEWATCH_APP_URL }}
+          CRON_SECRET: ${{ secrets.CHANGEWATCH_CRON_SECRET }}
+        shell: bash
+        run: |
+          if [[ -z "$APP_URL" || -z "$CRON_SECRET" ]]; then
+            echo "::warning::Set repository variable CHANGEWATCH_APP_URL and repository Actions secret CHANGEWATCH_CRON_SECRET; this scheduled tick was skipped."
+            exit 0
+          fi
+
+          if [[ ! "$APP_URL" =~ ^https:// ]]; then
+            echo "::error::CHANGEWATCH_APP_URL must be the public HTTPS origin of the deployed app."
+            exit 1
+          fi
+
+          response_file="$(mktemp)"
+          status="$(curl --silent --show-error --max-time 65 --retry 2 --retry-delay 2 \
+            --output "$response_file" --write-out '%{http_code}' \
+            --header "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL%/}/internal/worker/tick")"
+          cat "$response_file"
+          rm -f "$response_file"
+
+          if [[ ! "$status" =~ ^2[0-9][0-9]$ ]]; then
+            echo "::error::Scheduler endpoint returned HTTP $status."
+            exit 1
+          fi
