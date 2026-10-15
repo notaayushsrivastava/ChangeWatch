@@ -12,3 +12,5 @@ dist/
 .DS_Store
 .venv/*
 .agents/*
+# Local browser/database/container state
+postgres-data/
