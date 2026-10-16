@@ -143,17 +143,25 @@ function toggleMobileNav() {
   const btn = document.getElementById('mobile-menu-btn');
   if (!sheet || !backdrop) return;
 
-  const isOpen = !sheet.classList.contains('translate-x-full');
-  if (isOpen) {
+  const isHidden = sheet.classList.contains('hidden');
+  if (isHidden) {
+    sheet.classList.remove('hidden');
+    sheet.classList.add('flex');
+    requestAnimationFrame(() => {
+      sheet.classList.remove('translate-x-full');
+    });
+    backdrop.classList.remove('hidden');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('overflow-hidden');
+  } else {
     sheet.classList.add('translate-x-full');
     backdrop.classList.add('hidden');
     if (btn) btn.setAttribute('aria-expanded', 'false');
     document.body.classList.remove('overflow-hidden');
-  } else {
-    sheet.classList.remove('translate-x-full');
-    backdrop.classList.remove('hidden');
-    if (btn) btn.setAttribute('aria-expanded', 'true');
-    document.body.classList.add('overflow-hidden');
+    setTimeout(() => {
+      sheet.classList.remove('flex');
+      sheet.classList.add('hidden');
+    }, 300);
   }
 }
 

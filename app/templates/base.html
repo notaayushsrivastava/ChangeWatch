@@ -41,7 +41,7 @@
     })();
   </script>
 </head>
-<body class="h-full flex flex-col md:flex-row min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
+<body class="h-full flex flex-col md:flex-row min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-200 overflow-x-hidden">
 
   {% if current_user %}
   <!-- Mobile App Header Bar (< md) with Safe-Area Padding -->
@@ -67,7 +67,7 @@
 
   <!-- Mobile Drawer Overlay & Sheet Navigation (< md) -->
   <div id="mobile-nav-backdrop" class="hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-xs transition-opacity duration-300 md:hidden" onclick="toggleMobileNav()"></div>
-  <div id="mobile-nav-sheet" class="fixed inset-y-0 right-0 z-50 w-72 max-w-[85vw] bg-zinc-950 text-zinc-300 transform translate-x-full transition-transform duration-300 ease-in-out md:hidden flex flex-col justify-between border-l border-zinc-800 shadow-2xl pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+  <div id="mobile-nav-sheet" class="hidden fixed inset-y-0 right-0 z-50 w-72 max-w-[85vw] bg-zinc-950 text-zinc-300 transform translate-x-full transition-transform duration-300 ease-in-out md:hidden flex-col justify-between border-l border-zinc-800 shadow-2xl pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
     <div>
       <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-850">
         <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">Navigation</span>
