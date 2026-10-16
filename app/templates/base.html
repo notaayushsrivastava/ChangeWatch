@@ -2,7 +2,7 @@
 <html lang="en" class="h-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased selection:bg-indigo-600 selection:text-white">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>{% block title %}ChangeWatch — Silent Web Intelligence{% endblock %}</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="alternate icon" href="/static/favicon.ico">
@@ -44,8 +44,104 @@
 <body class="h-full flex flex-col md:flex-row min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
 
   {% if current_user %}
-  <!-- Desktop & Tablet Sidebar Navigation -->
-  <aside class="w-full md:w-64 bg-zinc-950 text-zinc-300 flex flex-col justify-between shrink-0 border-r border-zinc-800/80 shadow-xl z-20">
+  <!-- Mobile App Header Bar (< md) with Safe-Area Padding -->
+  <header class="flex md:hidden items-center justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 bg-zinc-950 text-zinc-300 border-b border-zinc-850 sticky top-0 z-30 shadow-md">
+    <a href="/dashboard" class="flex items-center gap-2.5 font-extrabold text-white text-sm tracking-tight">
+      <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-[0_0_12px_rgba(37,99,235,0.4)]">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+      </div>
+      <span class="bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent font-bold text-sm tracking-tight">ChangeWatch</span>
+    </a>
+
+    <div class="flex items-center gap-1.5">
+      <button type="button" onclick="toggleTheme()" class="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors" title="Toggle Theme" aria-label="Toggle Light / Dark Mode">
+        <svg class="theme-icon-sun w-4 h-4 text-amber-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <svg class="theme-icon-moon w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+      </button>
+
+      <button type="button" onclick="toggleMobileNav()" class="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl bg-zinc-900 text-zinc-200 hover:text-white border border-zinc-800 transition-colors" aria-label="Toggle Navigation Menu" aria-expanded="false" id="mobile-menu-btn">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Overlay & Sheet Navigation (< md) -->
+  <div id="mobile-nav-backdrop" class="hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-xs transition-opacity duration-300 md:hidden" onclick="toggleMobileNav()"></div>
+  <div id="mobile-nav-sheet" class="fixed inset-y-0 right-0 z-50 w-72 max-w-[85vw] bg-zinc-950 text-zinc-300 transform translate-x-full transition-transform duration-300 ease-in-out md:hidden flex flex-col justify-between border-l border-zinc-800 shadow-2xl pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div>
+      <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-850">
+        <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">Navigation</span>
+        <button type="button" onclick="toggleMobileNav()" class="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors" aria-label="Close menu">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <nav class="p-4 space-y-1.5">
+        <div class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Workspace</div>
+        <a href="/dashboard" class="flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition-all {% if request.url.path == '/dashboard' or request.url.path == '/' %}bg-zinc-850/90 text-white shadow-xs border border-zinc-700/40{% else %}text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100{% endif %}">
+          <span class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            Dashboard
+          </span>
+        </a>
+
+        <a href="/monitors/new" class="flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition-all {% if request.url.path == '/monitors/new' %}bg-zinc-850/90 text-white shadow-xs border border-zinc-700/40{% else %}text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100{% endif %}">
+          <span class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Monitor
+          </span>
+        </a>
+
+        <div class="px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Configuration</div>
+        <a href="/settings/notifications" class="flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition-all {% if request.url.path == '/settings/notifications' %}bg-zinc-850/90 text-white shadow-xs border border-zinc-700/40{% else %}text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100{% endif %}">
+          <span class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            Alert Channels
+          </span>
+        </a>
+
+        <div class="px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Resources</div>
+        <a href="/docs" class="flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition-all {% if request.url.path == '/docs' %}bg-zinc-850/90 text-white shadow-xs border border-zinc-700/40{% else %}text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100{% endif %}">
+          <span class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            Documentation
+          </span>
+        </a>
+
+        <a href="/contact" class="flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition-all {% if request.url.path == '/contact' %}bg-zinc-850/90 text-white shadow-xs border border-zinc-700/40{% else %}text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100{% endif %}">
+          <span class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+            Contact
+          </span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Mobile Drawer Footer Profile & Sign Out -->
+    <div class="p-4 m-3 space-y-3 bg-zinc-900/90 rounded-2xl border border-zinc-800">
+      <div class="flex items-center justify-between">
+        <button type="button" onclick="toggleMotion()" class="min-h-[44px] flex items-center gap-2 text-zinc-300 hover:text-white px-2 py-1 rounded-lg text-xs font-mono" title="Optimize for Windows: Toggle animations" aria-label="Toggle Animation Effects">
+          <span class="motion-indicator w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+          <span>Motion FX</span>
+        </button>
+      </div>
+      <div class="pt-2 border-t border-zinc-800 flex items-center justify-between">
+        <div class="truncate pr-2">
+          <div class="text-xs font-semibold text-zinc-200 truncate">{{ current_user.email }}</div>
+          <div class="text-[10px] text-zinc-400 font-mono">{{ current_user.timezone }}</div>
+        </div>
+        <form action="/auth/logout" method="POST" class="shrink-0">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" title="Sign out" aria-label="Sign out" class="min-w-[44px] min-h-[44px] rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white flex items-center justify-center transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop & Tablet Sidebar Navigation (hidden on mobile, visible on >= md) -->
+  <aside class="hidden md:flex w-64 bg-zinc-950 text-zinc-300 flex-col justify-between shrink-0 border-r border-zinc-800/80 shadow-xl z-20">
     <div>
       <!-- Brand & Status Pill -->
       <div class="h-18 flex items-center justify-between px-6 border-b border-zinc-850">
@@ -104,13 +200,13 @@
     <div class="p-3 m-3 space-y-2">
       <!-- Dark Mode & Windows Motion Switcher -->
       <div class="p-2 bg-zinc-900/80 rounded-xl border border-zinc-800/80 flex items-center justify-between text-xs">
-        <button type="button" onclick="toggleTheme()" class="flex items-center gap-2 text-zinc-300 hover:text-white px-2 py-1 rounded-lg hover:bg-zinc-800 transition-colors text-[11px] font-semibold" title="Toggle Light / Dark Mode">
+        <button type="button" onclick="toggleTheme()" class="min-h-[44px] min-w-[44px] flex items-center justify-center gap-2 text-zinc-300 hover:text-white px-2 py-1 rounded-lg hover:bg-zinc-800 transition-colors text-[11px] font-semibold" title="Toggle Light / Dark Mode" aria-label="Toggle Light / Dark Mode">
           <svg class="theme-icon-sun w-3.5 h-3.5 text-amber-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
           <svg class="theme-icon-moon w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
           <span class="theme-label">Theme</span>
         </button>
 
-        <button type="button" onclick="toggleMotion()" class="flex items-center gap-1.5 text-zinc-400 hover:text-white px-2 py-1 rounded-lg hover:bg-zinc-800 transition-colors text-[11px] font-mono" title="Optimize for Windows: Toggle animations">
+        <button type="button" onclick="toggleMotion()" class="min-h-[44px] flex items-center gap-1.5 text-zinc-400 hover:text-white px-2 py-1 rounded-lg hover:bg-zinc-800 transition-colors text-[11px] font-mono" title="Optimize for Windows: Toggle animations" aria-label="Toggle Animation Effects">
           <span class="motion-indicator w-2 h-2 rounded-full bg-emerald-400"></span>
           <span class="motion-label text-[10px]">Motion</span>
         </button>
@@ -124,28 +220,28 @@
         </div>
         <form action="/auth/logout" method="POST" class="shrink-0">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <button type="submit" title="Sign out" class="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          <button type="submit" title="Sign out" aria-label="Sign out" class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
           </button>
         </form>
       </div>
     </div>
   </aside>
   {% else %}
-  <!-- Floating Guest Preferences & Navigation Pill -->
-  <div class="fixed top-4 right-4 z-50 flex items-center gap-1.5 p-1.5 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md rounded-full border border-zinc-200/80 dark:border-zinc-800 shadow-md">
+  <!-- Floating Guest Preferences & Navigation Pill with Safe-Area Inset -->
+  <div class="fixed top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] z-50 flex items-center gap-1.5 p-1.5 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md rounded-full border border-zinc-200/80 dark:border-zinc-800 shadow-md">
     <a href="/" class="px-2.5 py-1 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-colors">Home</a>
     <a href="/docs" class="px-2.5 py-1 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-colors">Docs</a>
     <a href="/contact" class="px-2.5 py-1 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-colors hidden sm:inline-block">Contact</a>
     <span class="text-zinc-300 dark:text-zinc-700">|</span>
-    <button type="button" onclick="toggleTheme()" class="p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition-colors" title="Toggle Light / Dark Mode">
+    <button type="button" onclick="toggleTheme()" class="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition-colors" title="Toggle Light / Dark Mode" aria-label="Toggle Light / Dark Mode">
       <svg class="theme-icon-sun w-4 h-4 text-amber-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
       <svg class="theme-icon-moon w-4 h-4 text-zinc-600 dark:text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
     </button>
-    <button type="button" onclick="toggleMotion()" class="p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition-colors flex items-center gap-1 font-mono text-[10px]" title="Toggle Animation Effects (Windows PC Optimization)">
+    <button type="button" onclick="toggleMotion()" class="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition-colors font-mono text-[10px]" title="Toggle Animation Effects (Windows PC Optimization)" aria-label="Toggle Animation Effects">
       <span class="motion-indicator w-2 h-2 rounded-full bg-emerald-400"></span>
     </button>
-    <a href="/auth/login" class="ml-1 px-3 py-1 rounded-full text-xs font-bold bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white shadow-2xs transition-colors">
+    <a href="/auth/login" class="ml-1 px-3 py-1.5 rounded-full text-xs font-bold bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white shadow-2xs transition-colors">
       Sign In
     </a>
   </div>

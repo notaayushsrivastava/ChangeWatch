@@ -20,10 +20,10 @@
       </div>
 
       <!-- Version Selector Toolbar -->
-      <form action="/monitors/{{ monitor.id }}/diff" method="GET" class="flex items-center gap-2.5 bg-zinc-200/70 dark:bg-zinc-850 p-1.5 rounded-2xl border border-zinc-300/60 dark:border-zinc-800 shadow-xs">
-        <div class="flex items-center gap-2 text-xs pl-2">
+      <form action="/monitors/{{ monitor.id }}/diff" method="GET" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 bg-zinc-200/70 dark:bg-zinc-850 p-2 sm:p-1.5 rounded-2xl border border-zinc-300/60 dark:border-zinc-800 shadow-xs">
+        <div class="flex items-center justify-between sm:justify-start gap-2 text-xs px-2">
           <span class="text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider text-[10px]">Baseline:</span>
-          <select name="from" class="border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-200 font-mono font-medium shadow-2xs" onchange="this.form.submit()">
+          <select name="from" class="border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 sm:py-1 text-base sm:text-xs bg-white dark:bg-zinc-800 dark:text-zinc-200 font-mono font-medium shadow-2xs" onchange="this.form.submit()">
             {% for v in all_versions %}
             <option value="{{ v.id }}" {% if v.id == from_version.id %}selected{% endif %}>
               v{{ v.version_number }} ({{ v.created_at.strftime('%b %d, %H:%M') }})
@@ -32,11 +32,11 @@
           </select>
         </div>
 
-        <span class="text-zinc-400 dark:text-zinc-500 font-bold">&rarr;</span>
+        <span class="text-zinc-400 dark:text-zinc-500 font-bold text-center hidden sm:inline">&rarr;</span>
 
-        <div class="flex items-center gap-2 text-xs pr-1">
+        <div class="flex items-center justify-between sm:justify-start gap-2 text-xs px-2">
           <span class="text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider text-[10px]">Target:</span>
-          <select name="to" class="border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-200 font-mono font-medium shadow-2xs" onchange="this.form.submit()">
+          <select name="to" class="border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 sm:py-1 text-base sm:text-xs bg-white dark:bg-zinc-800 dark:text-zinc-200 font-mono font-medium shadow-2xs" onchange="this.form.submit()">
             {% for v in all_versions %}
             <option value="{{ v.id }}" {% if v.id == to_version.id %}selected{% endif %}>
               v{{ v.version_number }} ({{ v.created_at.strftime('%b %d, %H:%M') }})
@@ -51,13 +51,13 @@
   <!-- Summary Banner -->
   <div class="double-bezel">
     <div class="double-bezel-inner p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
-      <div class="flex items-center gap-4">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
         <div>
           <span class="text-zinc-400 dark:text-zinc-500 uppercase text-[10px] tracking-wider font-bold">Baseline:</span>
           <span class="font-extrabold text-zinc-900 dark:text-zinc-100 ml-1">v{{ from_version.version_number }}</span>
           <span class="text-zinc-500 dark:text-zinc-400 font-mono text-[11px] ml-1">({{ from_version.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }})</span>
         </div>
-        <span class="text-zinc-300 dark:text-zinc-700 hidden md:inline">|</span>
+        <span class="text-zinc-300 dark:text-zinc-700 hidden sm:inline">|</span>
         <div>
           <span class="text-zinc-400 dark:text-zinc-500 uppercase text-[10px] tracking-wider font-bold">Current:</span>
           <span class="font-extrabold text-zinc-900 dark:text-zinc-100 ml-1">v{{ to_version.version_number }}</span>
@@ -70,21 +70,21 @@
     </div>
   </div>
 
-  <!-- Studio View Switcher Tabs -->
-  <div class="border-b border-zinc-200 dark:border-zinc-800 flex gap-6 text-xs font-bold uppercase tracking-wider">
-    <button onclick="switchTab('text')" id="tab-btn-text" class="pb-3 border-b-2 border-zinc-950 dark:border-zinc-100 text-zinc-950 dark:text-zinc-100 flex items-center gap-2 transition-all">
+  <!-- Studio View Switcher Tabs (Horizontally scrollable on mobile) -->
+  <div class="border-b border-zinc-200 dark:border-zinc-800 flex gap-4 sm:gap-6 text-xs font-bold uppercase tracking-wider overflow-x-auto whitespace-nowrap scrollbar-none pb-0.5">
+    <button onclick="switchTab('text')" id="tab-btn-text" class="pb-3 border-b-2 border-zinc-950 dark:border-zinc-100 text-zinc-950 dark:text-zinc-100 flex items-center gap-2 shrink-0 transition-all min-h-[44px]">
       <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
       Text Diff
     </button>
-    <button onclick="switchTab('side-by-side')" id="tab-btn-side-by-side" class="pb-3 border-b-2 border-transparent text-zinc-400 hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300 flex items-center gap-2 transition-all">
+    <button onclick="switchTab('side-by-side')" id="tab-btn-side-by-side" class="pb-3 border-b-2 border-transparent text-zinc-400 hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300 flex items-center gap-2 shrink-0 transition-all min-h-[44px]">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
       Side-by-Side
     </button>
-    <button onclick="switchTab('slider')" id="tab-btn-slider" class="pb-3 border-b-2 border-transparent text-zinc-400 hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300 flex items-center gap-2 transition-all">
+    <button onclick="switchTab('slider')" id="tab-btn-slider" class="pb-3 border-b-2 border-transparent text-zinc-400 hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300 flex items-center gap-2 shrink-0 transition-all min-h-[44px]">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/></svg>
       Swipe Slider
     </button>
-    <button onclick="switchTab('visual')" id="tab-btn-visual" class="pb-3 border-b-2 border-transparent text-zinc-400 hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300 flex items-center gap-2 transition-all">
+    <button onclick="switchTab('visual')" id="tab-btn-visual" class="pb-3 border-b-2 border-transparent text-zinc-400 hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300 flex items-center gap-2 shrink-0 transition-all min-h-[44px]">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
       Pixel Diff Mask
     </button>
@@ -166,7 +166,7 @@
   <!-- TAB 3: SWIPE SLIDER -->
   <div id="tab-slider" class="hidden double-bezel">
     <div class="double-bezel-inner p-6">
-      <div class="relative w-full max-w-4xl mx-auto h-[600px] overflow-hidden border border-zinc-250 dark:border-zinc-800 rounded-2xl select-none shadow-xs" id="slider-container">
+      <div class="relative w-full max-w-4xl mx-auto h-[380px] sm:h-[600px] overflow-hidden border border-zinc-250 dark:border-zinc-800 rounded-2xl select-none shadow-xs touch-pan-y" id="slider-container">
         {% if from_version.screenshot_artifact_key and to_version.screenshot_artifact_key %}
         <!-- Target Image -->
         <img src="/artifacts/{{ to_version.screenshot_artifact_key }}" class="absolute inset-0 w-full h-full object-contain bg-zinc-50 dark:bg-zinc-950" alt="After">
@@ -177,8 +177,8 @@
         </div>
 
         <!-- Divider line with drag handle -->
-        <div id="slider-handle" class="absolute top-0 bottom-0 w-1 bg-zinc-950 dark:bg-zinc-100 cursor-ew-resize flex items-center justify-center shadow-lg" style="left: 50%;">
-          <div class="w-8 h-8 rounded-full bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 flex items-center justify-center text-xs font-bold shadow-md border-2 border-white dark:border-zinc-900">
+        <div id="slider-handle" class="absolute top-0 bottom-0 w-1 bg-zinc-950 dark:bg-zinc-100 cursor-ew-resize flex items-center justify-center shadow-lg touch-none" role="slider" tabindex="0" aria-label="Compare baseline and target screenshot" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" style="left: 50%;">
+          <div class="w-10 h-10 rounded-full bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 flex items-center justify-center text-sm font-bold shadow-md border-2 border-white dark:border-zinc-900 select-none">
             &#8644;
           </div>
         </div>

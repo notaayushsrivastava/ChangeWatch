@@ -1,5 +1,5 @@
 <!-- Cookie & Local Storage Consent Banner -->
-<div id="cw-cookie-banner" class="hidden fixed bottom-4 right-4 left-4 sm:left-auto sm:max-w-md z-50 transition-all duration-300">
+<div id="cw-cookie-banner" class="hidden fixed bottom-[max(1rem,calc(1rem+env(safe-area-inset-bottom)))] right-4 left-4 sm:left-auto sm:max-w-md z-50 transition-all duration-300">
   <div class="double-bezel shadow-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md">
     <div class="double-bezel-inner p-5 space-y-3.5">
       <div class="flex items-start gap-3">
@@ -18,11 +18,11 @@
           </div>
         </div>
       </div>
-      <div class="flex items-center justify-end gap-2 pt-1 border-t border-zinc-150 dark:border-zinc-800">
-        <button type="button" onclick="setCookieConsent('essential')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-zinc-150 dark:border-zinc-800">
+        <button type="button" onclick="setCookieConsent('essential')" class="min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center" aria-label="Use essential cookies only">
           Essential Only
         </button>
-        <button type="button" onclick="setCookieConsent('accepted')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white shadow-xs transition-colors">
+        <button type="button" onclick="setCookieConsent('accepted')" class="min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white shadow-xs transition-colors flex items-center justify-center" aria-label="Accept all preferences">
           Accept All
         </button>
       </div>

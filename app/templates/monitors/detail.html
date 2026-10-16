@@ -47,7 +47,7 @@
       <div class="flex items-center flex-wrap gap-2.5">
         <form action="/monitors/{{ monitor.id }}/check-now" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <button type="submit" class="btn-island bg-zinc-950 hover:bg-zinc-800 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white shadow-xs group">
+          <button type="submit" class="min-h-[44px] btn-island bg-zinc-950 hover:bg-zinc-800 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white shadow-xs group">
             <span>Check Now</span>
             <div class="btn-island-icon bg-white/10 group-hover:bg-white/20">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -55,7 +55,7 @@
           </button>
         </form>
 
-        <a href="/monitors/{{ monitor.id }}/regions" class="btn-island bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-250 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 shadow-xs group">
+        <a href="/monitors/{{ monitor.id }}/regions" class="min-h-[44px] btn-island bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-250 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 shadow-xs group">
           <span>Choose Regions</span>
           <div class="btn-island-icon bg-zinc-100 dark:bg-zinc-700 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-600 text-zinc-700 dark:text-zinc-200">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
@@ -65,26 +65,26 @@
         {% if monitor.state == 'paused' %}
         <form action="/monitors/{{ monitor.id }}/resume" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <button type="submit" class="px-4 py-2 bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-250 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-full text-xs font-bold transition-colors">
+          <button type="submit" class="min-h-[44px] px-4 py-2 bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-250 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-full text-xs font-bold transition-colors flex items-center justify-center">
             Resume
           </button>
         </form>
         {% else %}
         <form action="/monitors/{{ monitor.id }}/pause" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <button type="submit" class="px-4 py-2 bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-250 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-full text-xs font-bold transition-colors">
+          <button type="submit" class="min-h-[44px] px-4 py-2 bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-250 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-full text-xs font-bold transition-colors flex items-center justify-center">
             Pause
           </button>
         </form>
         {% endif %}
 
-        <a href="/monitors/{{ monitor.id }}/edit" class="px-4 py-2 bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-250 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-full text-xs font-bold transition-colors">
+        <a href="/monitors/{{ monitor.id }}/edit" class="min-h-[44px] px-4 py-2 bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-250 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-full text-xs font-bold transition-colors flex items-center justify-center">
           Edit
         </a>
 
         <form action="/monitors/{{ monitor.id }}/delete" method="POST" onsubmit="return confirm('Delete this monitor and purge all historical snapshots?');">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <button type="submit" class="px-4 py-2 bg-white hover:bg-rose-50 dark:bg-zinc-800 dark:hover:bg-rose-950/60 border border-zinc-250 dark:border-zinc-700 text-rose-600 dark:text-rose-400 rounded-full text-xs font-bold transition-colors">
+          <button type="submit" class="min-h-[44px] px-4 py-2 bg-white hover:bg-rose-50 dark:bg-zinc-800 dark:hover:bg-rose-950/60 border border-zinc-250 dark:border-zinc-700 text-rose-600 dark:text-rose-400 rounded-full text-xs font-bold transition-colors flex items-center justify-center">
             Delete
           </button>
         </form>

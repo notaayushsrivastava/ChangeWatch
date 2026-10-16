@@ -2,7 +2,7 @@
 <html lang="en" class="h-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased selection:bg-indigo-600 selection:text-white scroll-smooth">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>ChangeWatch — Silent Web Intelligence & Noise-Free Monitoring</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="alternate icon" href="/static/favicon.ico">
@@ -59,8 +59,8 @@
   <div class="absolute top-0 inset-x-0 h-[800px] landing-grid pointer-events-none -z-10 opacity-70"></div>
 
   <!-- 1. Floating Detached Glass Island Navbar -->
-  <header class="sticky top-5 z-50 px-4 max-w-6xl mx-auto w-full">
-    <nav class="backdrop-blur-xl bg-white/75 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 shadow-md shadow-zinc-900/5 rounded-full px-5 py-3 flex items-center justify-between transition-all duration-300">
+  <header class="sticky top-[max(1rem,env(safe-area-inset-top))] z-50 px-4 max-w-6xl mx-auto w-full">
+    <nav class="backdrop-blur-xl bg-white/75 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 shadow-md shadow-zinc-900/5 rounded-full px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between transition-all duration-300">
       
       <!-- Brand Logo -->
       <a href="/" class="flex items-center gap-2.5 font-extrabold text-zinc-950 dark:text-white group">
@@ -85,39 +85,84 @@
       </div>
 
       <!-- User Auth State & Theme Toggles -->
-      <div class="flex items-center gap-2.5">
+      <div class="flex items-center gap-1.5 sm:gap-2.5">
         <!-- Theme & Windows Motion Toggles -->
-        <div class="flex items-center gap-1 border-r border-zinc-200 dark:border-zinc-800 pr-2 mr-1">
-          <button type="button" onclick="toggleTheme()" class="p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition-colors" title="Toggle Light / Dark Mode">
-            <svg class="theme-icon-sun w-3.5 h-3.5 text-amber-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-            <svg class="theme-icon-moon w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        <div class="flex items-center gap-1 border-r border-zinc-200 dark:border-zinc-800 pr-1 sm:pr-2 mr-1">
+          <button type="button" onclick="toggleTheme()" class="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition-colors" title="Toggle Light / Dark Mode" aria-label="Toggle Light / Dark Mode">
+            <svg class="theme-icon-sun w-4 h-4 text-amber-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            <svg class="theme-icon-moon w-4 h-4 text-zinc-500 dark:text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
           </button>
-          <button type="button" onclick="toggleMotion()" class="p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition-colors flex items-center gap-1 font-mono text-[10px]" title="Optimize for Windows: Toggle animations">
-            <span class="motion-indicator w-2 h-2 rounded-full bg-emerald-400"></span>
+          <button type="button" onclick="toggleMotion()" class="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition-colors font-mono text-[10px]" title="Optimize for Windows: Toggle animations" aria-label="Toggle Animation Effects">
+            <span class="motion-indicator w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
           </button>
         </div>
 
         {% if current_user %}
-          <a href="/dashboard" class="btn-island bg-zinc-950 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 text-white dark:text-zinc-950 shadow-sm">
+          <a href="/dashboard" class="btn-island bg-zinc-950 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 text-white dark:text-zinc-950 shadow-sm hidden sm:inline-flex">
             <span>Dashboard</span>
             <span class="btn-island-icon bg-white/15 dark:bg-zinc-950/10">
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
             </span>
           </a>
         {% else %}
-          <a href="/auth/login" class="px-3.5 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-colors">
+          <a href="/auth/login" class="px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-colors hidden sm:inline-block">
             Sign In
           </a>
-          <a href="/auth/signup" class="btn-island bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20">
+          <a href="/auth/signup" class="btn-island bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 text-xs py-2 px-3.5">
             <span>Get Started</span>
             <span class="btn-island-icon bg-white/20">
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
             </span>
           </a>
         {% endif %}
+
+        <!-- Mobile Drawer Menu Button (visible on < md) -->
+        <button type="button" onclick="toggleLandingNav()" class="md:hidden min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors ml-1" aria-label="Open Navigation Menu" aria-expanded="false" id="landing-menu-btn">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
       </div>
     </nav>
   </header>
+
+  <!-- Mobile Slide-out Drawer for Landing Page (< md) -->
+  <div id="landing-nav-backdrop" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs transition-opacity duration-300 md:hidden" onclick="toggleLandingNav()"></div>
+  <div id="landing-nav-sheet" class="fixed inset-y-0 right-0 z-50 w-72 max-w-[85vw] bg-zinc-950 text-zinc-300 transform translate-x-full transition-transform duration-300 ease-in-out md:hidden flex flex-col justify-between border-l border-zinc-800 shadow-2xl pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div>
+      <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-850">
+        <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">ChangeWatch Menu</span>
+        <button type="button" onclick="toggleLandingNav()" class="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors" aria-label="Close menu">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <nav class="p-4 space-y-1">
+        <a href="#features" onclick="toggleLandingNav()" class="block px-4 py-3 rounded-xl text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 transition-colors">Features</a>
+        <a href="#demo" onclick="toggleLandingNav()" class="block px-4 py-3 rounded-xl text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 transition-colors">Interactive Diff</a>
+        <a href="/docs" class="block px-4 py-3 rounded-xl text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 transition-colors">Documentation</a>
+        <a href="#architecture" onclick="toggleLandingNav()" class="block px-4 py-3 rounded-xl text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 transition-colors">Architecture</a>
+        <a href="#security" onclick="toggleLandingNav()" class="block px-4 py-3 rounded-xl text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 transition-colors">SSRF Fortress</a>
+        <a href="/contact" class="block px-4 py-3 rounded-xl text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 transition-colors">Contact</a>
+        <a href="#faq" onclick="toggleLandingNav()" class="block px-4 py-3 rounded-xl text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 transition-colors">FAQ</a>
+      </nav>
+    </div>
+
+    <div class="p-4 m-3 space-y-3 bg-zinc-900/90 rounded-2xl border border-zinc-800">
+      {% if current_user %}
+        <a href="/dashboard" class="btn-island bg-indigo-600 hover:bg-indigo-700 text-white w-full justify-center py-2.5 text-xs font-bold shadow-md">
+          <span>Go to Dashboard</span>
+          <span class="btn-island-icon bg-white/20">&rarr;</span>
+        </a>
+      {% else %}
+        <a href="/auth/signup" class="btn-island bg-indigo-600 hover:bg-indigo-700 text-white w-full justify-center py-2.5 text-xs font-bold shadow-md">
+          <span>Get Started Free</span>
+          <span class="btn-island-icon bg-white/20">&rarr;</span>
+        </a>
+        <a href="/auth/login" class="block text-center py-2 text-xs font-semibold text-zinc-400 hover:text-white transition-colors">
+          Existing User Sign In &rarr;
+        </a>
+      {% endif %}
+    </div>
+  </div>
 
   <main class="flex-1">
 
@@ -233,47 +278,47 @@
           <div class="relative bg-zinc-950 min-h-[420px] flex items-center justify-center p-6 select-none overflow-hidden" id="demo-stage">
 
             <!-- MODE 1: Interactive Swipe Slider View -->
-            <div id="demo-view-swipe" class="w-full max-w-3xl aspect-[16/9] relative rounded-xl overflow-hidden border border-zinc-800 shadow-xl bg-zinc-900">
+            <div id="demo-view-swipe" class="w-full max-w-3xl min-h-[390px] sm:min-h-[420px] md:aspect-[16/9] relative rounded-xl overflow-hidden border border-zinc-800 shadow-xl bg-zinc-900 touch-pan-y">
               
               <!-- BEFORE (Underneath) -->
-              <div class="absolute inset-0 p-8 flex flex-col justify-between bg-zinc-900 text-white">
-                <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-4 items-start">
+              <div class="absolute inset-0 p-5 sm:p-8 flex flex-col justify-between bg-zinc-900 text-white">
+                <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-3 sm:gap-4 items-start">
                   <div class="min-w-0">
-                    <span class="eyebrow-badge bg-zinc-800 text-zinc-400 border border-zinc-700">BASELINE CAPTURE</span>
-                    <h3 class="text-2xl font-bold mt-2">GeForce RTX 5090 Ultra OC</h3>
-                    <p class="text-xs text-zinc-400">32GB GDDR7 • 512-bit Memory Interface</p>
+                    <span class="eyebrow-badge bg-zinc-800 text-zinc-400 border border-zinc-700 text-[10px]">BASELINE CAPTURE</span>
+                    <h3 class="text-xl sm:text-2xl font-bold mt-1.5 sm:mt-2">GeForce RTX 5090 Ultra OC</h3>
+                    <p class="text-[11px] sm:text-xs text-zinc-400">32GB GDDR7 • 512-bit Memory Interface</p>
                   </div>
-                  <div class="text-right whitespace-nowrap">
-                    <span class="text-3xl font-extrabold text-white font-mono">$1,999.00</span>
-                    <span class="block text-xs font-semibold text-emerald-400 mt-1">● In Stock (Limit 1 per customer)</span>
+                  <div class="text-left sm:text-right whitespace-nowrap pt-1 sm:pt-0">
+                    <span class="text-2xl sm:text-3xl font-extrabold text-white font-mono">$1,999.00</span>
+                    <span class="block text-xs font-semibold text-emerald-400 mt-0.5 sm:mt-1">● In Stock (Limit 1)</span>
                   </div>
                 </div>
-                <div class="p-4 bg-zinc-950/70 rounded-lg border border-zinc-800 font-mono text-xs text-zinc-400">
+                <div class="p-3 sm:p-4 bg-zinc-950/70 rounded-lg border border-zinc-800 font-mono text-[11px] sm:text-xs text-zinc-400">
                   Shipped directly by Manufacturer. Standard 3-Year Warranty included.
                 </div>
               </div>
 
               <!-- AFTER (Clipped on top) -->
-              <div id="swipe-overlay" class="absolute inset-0 p-8 flex flex-col justify-between bg-indigo-950 text-white overflow-hidden border-r-2 border-indigo-400" style="width: 50%;">
-                <div class="swipe-overlay-content grid grid-cols-[minmax(0,1fr)_auto] gap-4 items-start" style="width: var(--swipe-stage-width, 100%);">
+              <div id="swipe-overlay" class="absolute inset-0 p-5 sm:p-8 flex flex-col justify-between bg-indigo-950 text-white overflow-hidden border-r-2 border-indigo-400" style="width: 50%;">
+                <div class="swipe-overlay-content grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-3 sm:gap-4 items-start" style="width: var(--swipe-stage-width, 100%);">
                   <div class="min-w-0">
-                    <span class="eyebrow-badge bg-indigo-900 text-indigo-300 border border-indigo-700">NEW CAPTURE (10:15 AM)</span>
-                    <h3 class="text-2xl font-bold mt-2">GeForce RTX 5090 Ultra OC</h3>
-                    <p class="text-xs text-indigo-300">32GB GDDR7 • 512-bit Memory Interface</p>
+                    <span class="eyebrow-badge bg-indigo-900 text-indigo-300 border border-indigo-700 text-[10px]">NEW CAPTURE (10:15 AM)</span>
+                    <h3 class="text-xl sm:text-2xl font-bold mt-1.5 sm:mt-2">GeForce RTX 5090 Ultra OC</h3>
+                    <p class="text-[11px] sm:text-xs text-indigo-300">32GB GDDR7 • 512-bit Memory Interface</p>
                   </div>
-                  <div class="text-right whitespace-nowrap">
-                    <span class="text-3xl font-extrabold text-rose-400 font-mono">$1,849.00</span>
-                    <span class="block text-xs font-semibold text-rose-400 mt-1">● Sold Out — Backorder Available</span>
+                  <div class="text-left sm:text-right whitespace-nowrap pt-1 sm:pt-0">
+                    <span class="text-2xl sm:text-3xl font-extrabold text-rose-400 font-mono">$1,849.00</span>
+                    <span class="block text-xs font-semibold text-rose-400 mt-0.5 sm:mt-1">● Sold Out — Backorder</span>
                   </div>
                 </div>
-                <div class="swipe-overlay-content p-4 bg-indigo-900/60 rounded-lg border border-indigo-700 font-mono text-xs text-indigo-200" style="width: var(--swipe-stage-width, 100%);">
+                <div class="swipe-overlay-content p-3 sm:p-4 bg-indigo-900/60 rounded-lg border border-indigo-700 font-mono text-[11px] sm:text-xs text-indigo-200" style="width: var(--swipe-stage-width, 100%);">
                   <span class="text-amber-300 font-bold">FLASH SALE:</span> -$150 Price reduction detected automatically.
                 </div>
               </div>
 
               <!-- Draggable Divider -->
-              <div id="swipe-divider" class="absolute top-0 bottom-0 w-0.5 bg-white cursor-ew-resize flex items-center justify-center shadow-lg z-10" role="slider" tabindex="0" aria-label="Compare baseline and new capture" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" style="left: 50%;">
-                <div class="w-8 h-8 rounded-full bg-white text-zinc-900 shadow-2xl flex items-center justify-center text-xs font-bold ring-4 ring-indigo-600/40">
+              <div id="swipe-divider" class="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize flex items-center justify-center shadow-lg z-10 touch-none" role="slider" tabindex="0" aria-label="Compare baseline and new capture" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" style="left: 50%;">
+                <div class="w-10 h-10 rounded-full bg-white text-zinc-900 shadow-2xl flex items-center justify-center text-sm font-bold ring-4 ring-indigo-600/40 select-none">
                   &harr;
                 </div>
               </div>
@@ -738,6 +783,27 @@
 
       updatePosition(stage.getBoundingClientRect().left + (stage.getBoundingClientRect().width / 2));
     })();
+
+    // Mobile Navigation Drawer Controller for Landing Page
+    function toggleLandingNav() {
+      const sheet = document.getElementById('landing-nav-sheet');
+      const backdrop = document.getElementById('landing-nav-backdrop');
+      const btn = document.getElementById('landing-menu-btn');
+      if (!sheet || !backdrop) return;
+
+      const isOpen = !sheet.classList.contains('translate-x-full');
+      if (isOpen) {
+        sheet.classList.add('translate-x-full');
+        backdrop.classList.add('hidden');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('overflow-hidden');
+      } else {
+        sheet.classList.remove('translate-x-full');
+        backdrop.classList.remove('hidden');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+        document.body.classList.add('overflow-hidden');
+      }
+    }
   </script>
   {% include "components/cookie_banner.html" %}
   <script src="/static/js/app.js"></script>

@@ -30,20 +30,20 @@
         <!-- Monitor Name -->
         <div>
           <label for="name" class="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">Monitor Name</label>
-          <input type="text" id="name" name="name" required maxlength="120" value="{{ monitor.name if monitor else '' }}" class="w-full px-4 py-2.5 rounded-xl border border-zinc-250 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100" placeholder="e.g. Tailwind CSS Changelog, Competitor Pricing">
+          <input type="text" id="name" name="name" required maxlength="120" value="{{ monitor.name if monitor else '' }}" class="w-full px-4 py-3 sm:py-2.5 rounded-xl border border-zinc-250 dark:border-zinc-700 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100" placeholder="e.g. Tailwind CSS Changelog, Competitor Pricing">
         </div>
 
         <!-- Target URL -->
         <div>
           <label for="url" class="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">Target Web Page URL</label>
-          <input type="url" id="url" name="url" required value="{{ monitor.url if monitor else '' }}" class="w-full px-4 py-2.5 rounded-xl border border-zinc-250 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors font-mono bg-zinc-50/50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100" placeholder="https://example.com/changelog">
+          <input type="url" id="url" name="url" required value="{{ monitor.url if monitor else '' }}" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="url" class="w-full px-4 py-3 sm:py-2.5 rounded-xl border border-zinc-250 dark:border-zinc-700 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors font-mono bg-zinc-50/50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100" placeholder="https://example.com/changelog">
           <p class="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1 font-mono">Public HTTP/HTTPS targets only. SSRF validation strictly blocks private subnets & metadata.</p>
         </div>
 
         <!-- Interval & Cadence -->
         <div>
           <label for="interval_minutes" class="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">Check Cadence</label>
-          <select id="interval_minutes" name="interval_minutes" class="w-full px-4 py-2.5 rounded-xl border border-zinc-250 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-medium">
+          <select id="interval_minutes" name="interval_minutes" class="w-full px-4 py-3 sm:py-2.5 rounded-xl border border-zinc-250 dark:border-zinc-700 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-medium">
             <option value="15" {% if monitor and monitor.interval_minutes == 15 %}selected{% endif %}>Every 15 minutes (High frequency)</option>
             <option value="30" {% if monitor and monitor.interval_minutes == 30 %}selected{% endif %}>Every 30 minutes</option>
             <option value="60" {% if not monitor or monitor.interval_minutes == 60 %}selected{% endif %}>Every 1 hour (Recommended default)</option>
@@ -59,7 +59,7 @@
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <label class="flex flex-col p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 cursor-pointer hover:border-zinc-350 dark:hover:border-zinc-700 transition-all has-[:checked]:border-indigo-600 dark:has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50/30 dark:has-[:checked]:bg-indigo-950/40">
               <div class="flex items-center gap-2">
-                <input type="radio" name="sensitivity" value="low" {% if monitor and monitor.sensitivity == 'low' %}checked{% endif %} class="text-indigo-600 focus:ring-indigo-500">
+                <input type="radio" name="sensitivity" value="low" {% if monitor and monitor.sensitivity == 'low' %}checked{% endif %} class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
                 <span class="text-sm font-bold text-zinc-950 dark:text-zinc-100">Low</span>
               </div>
               <span class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-2 leading-relaxed">Requires significant structural text changes; filters minor punctuation.</span>
@@ -67,7 +67,7 @@
 
             <label class="flex flex-col p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 cursor-pointer hover:border-zinc-350 dark:hover:border-zinc-700 transition-all has-[:checked]:border-indigo-600 dark:has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50/30 dark:has-[:checked]:bg-indigo-950/40">
               <div class="flex items-center gap-2">
-                <input type="radio" name="sensitivity" value="medium" {% if not monitor or monitor.sensitivity == 'medium' %}checked{% endif %} class="text-indigo-600 focus:ring-indigo-500">
+                <input type="radio" name="sensitivity" value="medium" {% if not monitor or monitor.sensitivity == 'medium' %}checked{% endif %} class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
                 <span class="text-sm font-bold text-zinc-950 dark:text-zinc-100">Medium</span>
               </div>
               <span class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-2 leading-relaxed">Balanced baseline; filters standard timestamps and counter fluctuations.</span>
@@ -75,7 +75,7 @@
 
             <label class="flex flex-col p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 cursor-pointer hover:border-zinc-350 dark:hover:border-zinc-700 transition-all has-[:checked]:border-indigo-600 dark:has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50/30 dark:has-[:checked]:bg-indigo-950/40">
               <div class="flex items-center gap-2">
-                <input type="radio" name="sensitivity" value="high" {% if monitor and monitor.sensitivity == 'high' %}checked{% endif %} class="text-indigo-600 focus:ring-indigo-500">
+                <input type="radio" name="sensitivity" value="high" {% if monitor and monitor.sensitivity == 'high' %}checked{% endif %} class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
                 <span class="text-sm font-bold text-zinc-950 dark:text-zinc-100">High</span>
               </div>
               <span class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-2 leading-relaxed">Immediate alert on any single word or numerical modification.</span>
@@ -90,24 +90,24 @@
           <!-- Keyword Filter (FR-10) -->
           <div class="mt-3">
             <label for="keywords" class="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">Alert Keywords (Optional)</label>
-            <input type="text" id="keywords" name="keywords" value="{{ monitor.keywords|join(', ') if monitor and monitor.keywords else '' }}" class="w-full px-4 py-2.5 rounded-xl border border-zinc-250 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors font-mono bg-zinc-50/50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100" placeholder="e.g. pricing, discount, release, critical, security">
+            <input type="text" id="keywords" name="keywords" value="{{ monitor.keywords|join(', ') if monitor and monitor.keywords else '' }}" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full px-4 py-3 sm:py-2.5 rounded-xl border border-zinc-250 dark:border-zinc-700 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors font-mono bg-zinc-50/50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100" placeholder="e.g. pricing, discount, release, critical, security">
             <p class="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1 font-mono">Comma-separated phrases. If set, notifications only fire if an added line matches one of these words.</p>
           </div>
 
           <!-- Numeric Selector (FR-11) -->
           <div class="mt-4">
             <label for="numeric_selector" class="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">Numeric Tracking CSS Selector (Optional)</label>
-            <input type="text" id="numeric_selector" name="numeric_selector" value="{{ monitor.numeric_selector if monitor and monitor.numeric_selector else '' }}" class="w-full px-4 py-2.5 rounded-xl border border-zinc-250 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors font-mono bg-zinc-50/50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100" placeholder="e.g. .pricing-value, #user-count, span.stat-number">
+            <input type="text" id="numeric_selector" name="numeric_selector" value="{{ monitor.numeric_selector if monitor and monitor.numeric_selector else '' }}" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full px-4 py-3 sm:py-2.5 rounded-xl border border-zinc-250 dark:border-zinc-700 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors font-mono bg-zinc-50/50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100" placeholder="e.g. .pricing-value, #user-count, span.stat-number">
             <p class="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1 font-mono">CSS selector of an element containing numbers/currency. ChangeWatch will plot a historical trendline.</p>
           </div>
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex items-center justify-end gap-3 pt-6 border-t border-zinc-200 dark:border-zinc-800">
-          <a href="/dashboard" class="px-5 py-2.5 rounded-full border border-zinc-250 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-bold transition-colors">
+        <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+          <a href="/dashboard" class="min-h-[44px] flex items-center justify-center px-5 py-2.5 rounded-full border border-zinc-250 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-bold transition-colors">
             Cancel
           </a>
-          <button type="submit" class="btn-island bg-zinc-950 dark:bg-indigo-600 hover:bg-zinc-800 dark:hover:bg-indigo-700 text-white shadow-md group">
+          <button type="submit" class="min-h-[44px] btn-island bg-zinc-950 dark:bg-indigo-600 hover:bg-zinc-800 dark:hover:bg-indigo-700 text-white shadow-md group justify-center">
             <span>{% if monitor %}Save Monitor Changes{% else %}Launch Monitor & Capture Baseline{% endif %}</span>
             <div class="btn-island-icon bg-white/10 group-hover:bg-white/20">
               &rarr;

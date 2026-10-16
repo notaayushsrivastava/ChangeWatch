@@ -30,17 +30,17 @@
 
         <div>
           <label for="email" class="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">Email address</label>
-          <input type="email" id="email" name="email" value="{{ email or '' }}" required autocomplete="email" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600" placeholder="you@domain.com">
+          <input type="email" id="email" name="email" value="{{ email or '' }}" required autocomplete="email" inputmode="email" autocapitalize="none" class="w-full px-4 py-3 sm:py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600" placeholder="you@domain.com">
         </div>
 
         <div>
           <label for="password" class="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">Password</label>
-          <input type="password" id="password" name="password" minlength="8" required autocomplete="new-password" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-400" placeholder="Minimum 8 characters">
+          <input type="password" id="password" name="password" minlength="8" required autocomplete="new-password" class="w-full px-4 py-3 sm:py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-400" placeholder="Minimum 8 characters">
         </div>
 
         <div>
           <label for="timezone" class="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">Timezone</label>
-          <select id="timezone" name="timezone" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 font-medium">
+          <select id="timezone" name="timezone" class="w-full px-4 py-3 sm:py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-zinc-50/50 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 font-medium">
             <option value="UTC" {% if not email_timezone or email_timezone == "UTC" %}selected{% endif %}>UTC</option>
             <option value="America/New_York" {% if email_timezone == "America/New_York" %}selected{% endif %}>Eastern Time (US)</option>
             <option value="America/Chicago" {% if email_timezone == "America/Chicago" %}selected{% endif %}>Central Time (US)</option>
@@ -53,7 +53,7 @@
           </select>
         </div>
 
-        <button type="submit" class="w-full py-3 px-4 bg-zinc-950 hover:bg-zinc-850 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 rounded-xl text-xs font-bold uppercase tracking-wider shadow-md shadow-zinc-900/10 transition-colors active:scale-98">
+        <button type="submit" class="w-full min-h-[44px] py-3 px-4 bg-zinc-950 hover:bg-zinc-850 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 rounded-xl text-xs font-bold uppercase tracking-wider shadow-md shadow-zinc-900/10 transition-colors active:scale-98 flex items-center justify-center">
           Get Started &rarr;
         </button>
       </form>

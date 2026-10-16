@@ -135,3 +135,35 @@ function copyToClipboard(text, btnElement) {
     });
   }
 }
+
+// 5. Mobile Navigation Drawer Controller
+function toggleMobileNav() {
+  const sheet = document.getElementById('mobile-nav-sheet');
+  const backdrop = document.getElementById('mobile-nav-backdrop');
+  const btn = document.getElementById('mobile-menu-btn');
+  if (!sheet || !backdrop) return;
+
+  const isOpen = !sheet.classList.contains('translate-x-full');
+  if (isOpen) {
+    sheet.classList.add('translate-x-full');
+    backdrop.classList.add('hidden');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('overflow-hidden');
+  } else {
+    sheet.classList.remove('translate-x-full');
+    backdrop.classList.remove('hidden');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('overflow-hidden');
+  }
+}
+
+// Close mobile nav when Esc is pressed
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const sheet = document.getElementById('mobile-nav-sheet');
+    if (sheet && !sheet.classList.contains('translate-x-full')) {
+      toggleMobileNav();
+    }
+  }
+});
+
