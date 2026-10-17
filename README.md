@@ -1,5 +1,7 @@
 # ChangeWatch
 
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://changewatch.aayushsrivastava.com/)
+
 ChangeWatch is a web service that monitors **public web pages** and alerts users to meaningful content changes while suppressing ordinary page churn (timestamps, counters, dynamic tokens, and ads).
 
 ---
