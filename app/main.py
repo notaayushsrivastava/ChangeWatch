@@ -39,7 +39,15 @@ _scheduler_task = None
 async def lifespan(app: FastAPI):
     # Validate production configuration before touching the database or artifact store.
     if settings.is_production:
-        settings.validate_production_config()
+        try:
+            settings.validate_production_config()
+        except RuntimeError as exc:
+            # The validator reports variable names and policy failures only; never log secret values.
+            import logging
+            logging.getLogger("changewatch.config").critical(
+                "Production configuration validation failed: %s", exc
+            )
+            raise
 
     # Opt-in only: use this to recover a fresh database when the external migration
     # workflow is unavailable. Keep the flag off normally; the runner serializes
