@@ -14,10 +14,30 @@
         <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/25">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
         </div>
+        {% if is_mcp %}
+        <div class="eyebrow-badge bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 mb-2">MCP Registration</div>
+        <h1 class="text-2xl font-extrabold text-zinc-950 dark:text-zinc-50 tracking-tight">Create Account for {{ mcp_client_name or "AI Assistant" }}</h1>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Register your ChangeWatch account to connect your AI assistant.</p>
+        {% else %}
         <div class="eyebrow-badge bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 mb-2">Registration</div>
         <h1 class="text-2xl font-extrabold text-zinc-950 dark:text-zinc-50 tracking-tight">Create your account</h1>
         <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Start tracking public web pages with verified diff evidence.</p>
+        {% endif %}
       </div>
+
+      {% if is_mcp %}
+      <div class="mb-6 p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 text-left flex items-start gap-3">
+        <div class="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div class="min-w-0">
+          <div class="text-xs font-bold text-zinc-900 dark:text-zinc-100">AI Assistant Integration</div>
+          <div class="text-[11px] text-zinc-600 dark:text-zinc-300 mt-0.5 leading-relaxed">
+            After registering, you will immediately be redirected to authorize permissions for <span class="font-semibold text-blue-600 dark:text-blue-400">{{ mcp_client_name or "your MCP client" }}</span>.
+          </div>
+        </div>
+      </div>
+      {% endif %}
 
       {% if error %}
       <div role="alert" aria-live="polite" class="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-200">
@@ -27,6 +47,9 @@
 
       <form action="/auth/signup" method="POST" class="space-y-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
 
         <div>
           <label for="email" class="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-2">Email address</label>
@@ -59,7 +82,7 @@
       </form>
 
       <div class="mt-8 text-center text-xs text-zinc-600 dark:text-zinc-300 border-t border-zinc-200 dark:border-zinc-800 pt-5">
-        Already registered? <a href="/auth/login" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 font-bold">Sign in</a>
+        Already registered? <a href="/auth/login{% if next %}?next={{ next | urlencode }}{% endif %}" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 font-bold">Sign in</a>
       </div>
     </div>
   </div>

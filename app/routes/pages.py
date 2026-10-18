@@ -23,6 +23,24 @@ async def docs_page(request: Request, db: Session = Depends(get_db)):
     })
 
 
+@router.get("/docs/mcp", response_class=HTMLResponse)
+async def mcp_docs_page(request: Request, db: Session = Depends(get_db)):
+    user = get_current_user_optional(request, db)
+    csrf_token = get_or_create_csrf_token(request)
+    base_url = (
+        "https://changewatch.aayushsrivastava.com"
+        if (settings.is_production or (settings.APP_BASE_URL and "changewatch.aayushsrivastava.com" in settings.APP_BASE_URL))
+        else str(request.base_url).rstrip("/")
+    )
+    return templates.TemplateResponse(request, "docs_mcp.html", {
+        "current_user": user,
+        "csrf_token": csrf_token,
+        "base_url": base_url,
+        "mcp_http_url": f"{base_url}/mcp",
+        "mcp_sse_url": f"{base_url}/sse",
+    })
+
+
 @router.get("/privacy", response_class=HTMLResponse)
 async def privacy_page(request: Request, db: Session = Depends(get_db)):
     user = get_current_user_optional(request, db)

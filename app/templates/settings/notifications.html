@@ -113,6 +113,88 @@
     </div>
   </div>
 
+  <!-- AI & MCP Protocol Integration (Double-Bezel) -->
+  <div class="double-bezel" id="mcp-settings">
+    <div class="double-bezel-inner p-6 space-y-6">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+        <div>
+          <div class="eyebrow-badge bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 mb-1.5">Model Context Protocol</div>
+          <h2 class="text-base font-extrabold text-zinc-950 dark:text-zinc-100 tracking-tight">AI Agent & MCP Integration</h2>
+          <p class="text-xs text-zinc-400 dark:text-zinc-500">Connect Claude Desktop, Cursor, or autonomous agents to manage monitors, trigger checks, and analyze diffs.</p>
+        </div>
+      </div>
+
+      <!-- Server Endpoints -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-4 rounded-xl bg-zinc-50/60 dark:bg-zinc-900/40 border border-zinc-200/80 dark:border-zinc-800/80 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-zinc-900 dark:text-zinc-100">Streamable HTTP (MCP 2025)</span>
+            <span class="text-[9px] uppercase tracking-wider font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">Recommended</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" readonly value="{{ mcp_server_url }}" id="mcp-http-url" class="w-full text-xs font-mono px-3 py-2 rounded-lg bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 select-all">
+            <button type="button" onclick="copyToClipboard('{{ mcp_server_url }}', this)" class="min-h-[38px] px-3 py-2 rounded-lg bg-zinc-950 hover:bg-zinc-850 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold shrink-0 transition-colors">
+              Copy
+            </button>
+          </div>
+          <p class="text-[11px] text-zinc-400 dark:text-zinc-500">Supports native OAuth 2.0 discovery via <code class="font-mono text-zinc-600 dark:text-zinc-400">/.well-known/oauth-authorization-server</code>.</p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-zinc-50/60 dark:bg-zinc-900/40 border border-zinc-200/80 dark:border-zinc-800/80 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-zinc-900 dark:text-zinc-100">SSE Transport (Legacy)</span>
+            <span class="text-[9px] uppercase tracking-wider font-mono px-2 py-0.5 rounded-full bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300">Fallback</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" readonly value="{{ sse_server_url }}" id="mcp-sse-url" class="w-full text-xs font-mono px-3 py-2 rounded-lg bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 select-all">
+            <button type="button" onclick="copyToClipboard('{{ sse_server_url }}', this)" class="min-h-[38px] px-3 py-2 rounded-lg bg-zinc-950 hover:bg-zinc-850 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold shrink-0 transition-colors">
+              Copy
+            </button>
+          </div>
+          <p class="text-[11px] text-zinc-400 dark:text-zinc-500">Server-Sent Events endpoint with POST messages channel at <code class="font-mono text-zinc-600 dark:text-zinc-400">/sse/messages/</code>.</p>
+        </div>
+      </div>
+
+      <!-- Quick Client Config -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-zinc-900 dark:text-zinc-100">Claude Desktop Config (<code class="font-mono text-[11px]">claude_desktop_config.json</code>)</span>
+          <button type="button" onclick="copyClaudeConfig(this)" class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold">Copy JSON</button>
+        </div>
+        <div class="relative">
+          <pre id="claude-config-block" class="text-xs font-mono p-4 rounded-xl bg-zinc-900 text-zinc-100 overflow-x-auto border border-zinc-800"><code>{
+  "mcpServers": {
+    "changewatch": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "{{ mcp_server_url }}"]
+    }
+  }
+}</code></pre>
+        </div>
+      </div>
+
+      <!-- Personal Bearer Token -->
+      <div class="p-4 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/50 space-y-2">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-zinc-900 dark:text-zinc-100">Personal Access Bearer Token</div>
+            <div class="text-[11px] text-zinc-500 dark:text-zinc-400">For direct CLI access or clients that do not support interactive browser OAuth redirects.</div>
+          </div>
+          <button type="button" onclick="copyToClipboard('{{ mcp_token }}', this)" class="min-h-[36px] px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shrink-0 transition-colors">
+            Copy Token
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="password" id="mcp-token-input" readonly value="{{ mcp_token }}" class="w-full text-xs font-mono px-3 py-2 rounded-lg bg-white dark:bg-zinc-950 border border-blue-200 dark:border-blue-900/50 text-zinc-700 dark:text-zinc-300 select-all">
+          <button type="button" onclick="toggleTokenVisibility()" id="mcp-token-toggle" class="min-h-[38px] px-3 py-2 rounded-lg bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-medium shrink-0 transition-colors">
+            Reveal
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
 {% endblock %}
 
@@ -129,5 +211,35 @@
       help.innerText = 'Enter target email address. Handled via configured email transport.';
     }
   }
+
+  function copyToClipboard(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+      const originalText = btn.innerText;
+      btn.innerText = 'Copied!';
+      btn.classList.add('bg-emerald-600', 'text-white');
+      setTimeout(() => {
+        btn.innerText = originalText;
+        btn.classList.remove('bg-emerald-600', 'text-white');
+      }, 2000);
+    });
+  }
+
+  function copyClaudeConfig(btn) {
+    const code = document.getElementById('claude-config-block').innerText.trim();
+    copyToClipboard(code, btn);
+  }
+
+  function toggleTokenVisibility() {
+    const input = document.getElementById('mcp-token-input');
+    const btn = document.getElementById('mcp-token-toggle');
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.innerText = 'Hide';
+    } else {
+      input.type = 'password';
+      btn.innerText = 'Reveal';
+    }
+  }
 </script>
 {% endblock %}
+

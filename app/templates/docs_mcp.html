@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}MCP Integration & Installation — ChangeWatch{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-10 pb-16">
+
+  <!-- Breadcrumb & Header -->
+  <div class="pb-6 border-b border-zinc-200/80 dark:border-zinc-800">
+    <div class="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500 mb-2 font-mono">
+      <a href="/" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">ChangeWatch</a>
+      <span>/</span>
+      <a href="/docs" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Docs</a>
+      <span>/</span>
+      <span class="text-zinc-700 dark:text-zinc-300">MCP Server</span>
+    </div>
+    <div class="inline-flex items-center gap-2 eyebrow-badge bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-900/60 mb-3">
+      <span>AI AGENT PROTOCOL</span>
+      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+    </div>
+    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-zinc-950 dark:text-zinc-50">
+      Model Context Protocol (MCP) Integration
+    </h1>
+    <p class="text-sm sm:text-base text-zinc-600 dark:text-zinc-300 mt-3 max-w-3xl leading-relaxed">
+      Connect Claude Desktop, Cursor, or autonomous AI agents directly to your ChangeWatch account. Empower your AI to create web monitors, trigger headless checks, analyze visual & text diffs, and inspect anomalies with full OAuth 2.0 user-account isolation.
+    </p>
+
+    <!-- Navigation Anchors -->
+    <div class="flex flex-wrap gap-2 mt-6 pt-4 border-t border-zinc-150 dark:border-zinc-850 font-mono text-xs">
+      <a href="#quickstart" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">#quickstart</a>
+      <a href="#claude-desktop" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">#claude-desktop</a>
+      <a href="#cursor" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">#cursor-ide</a>
+      <a href="#oauth-auth" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">#oauth-security</a>
+      <a href="#tools-reference" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">#tools-reference</a>
+    </div>
+  </div>
+
+  <!-- Endpoints Overview -->
+  <section id="quickstart" class="space-y-4">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+      <h2 class="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">1. Server Endpoints</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="double-bezel">
+        <div class="double-bezel-inner p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-zinc-950 dark:text-zinc-100">Streamable HTTP (MCP 2025)</span>
+            <span class="text-[9px] uppercase tracking-wider font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">Recommended</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" readonly value="{{ mcp_http_url }}" class="w-full text-xs font-mono px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 select-all">
+            <button type="button" onclick="copySnippet('{{ mcp_http_url }}', this)" class="min-h-[38px] px-3.5 py-2 rounded-lg bg-zinc-950 hover:bg-zinc-850 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold shrink-0 transition-colors">
+              Copy
+            </button>
+          </div>
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Streamable JSON-RPC HTTP transport supporting RFC 8414 OAuth 2.0 discovery.</p>
+        </div>
+      </div>
+
+      <div class="double-bezel">
+        <div class="double-bezel-inner p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-zinc-950 dark:text-zinc-100">Server-Sent Events (SSE)</span>
+            <span class="text-[9px] uppercase tracking-wider font-mono px-2 py-0.5 rounded-full bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300">Fallback</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" readonly value="{{ mcp_sse_url }}" class="w-full text-xs font-mono px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 select-all">
+            <button type="button" onclick="copySnippet('{{ mcp_sse_url }}', this)" class="min-h-[38px] px-3.5 py-2 rounded-lg bg-zinc-950 hover:bg-zinc-850 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold shrink-0 transition-colors">
+              Copy
+            </button>
+          </div>
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Bidirectional SSE connection with message handling endpoint at <code class="font-mono text-zinc-700 dark:text-zinc-300">/sse/messages/</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Claude Desktop Configuration -->
+  <section id="claude-desktop" class="space-y-4">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+      <h2 class="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">2. Claude Desktop Setup</h2>
+    </div>
+
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-6 space-y-4">
+        <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+          To connect Claude Desktop, add ChangeWatch to your <code class="font-mono text-zinc-900 dark:text-zinc-100">claude_desktop_config.json</code> file using <code class="font-mono text-zinc-900 dark:text-zinc-100">mcp-remote</code>:
+        </p>
+
+        <div class="relative">
+          <div class="flex items-center justify-between pb-2">
+            <span class="text-[11px] font-mono text-zinc-400 dark:text-zinc-500">File location: ~/Library/Application Support/Claude/claude_desktop_config.json (macOS) or %APPDATA%\Claude\claude_desktop_config.json (Windows)</span>
+            <button type="button" onclick="copySnippet(document.getElementById('claude-json-code').innerText, this)" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-semibold">Copy JSON</button>
+          </div>
+          <pre class="text-xs font-mono p-4 rounded-xl bg-zinc-950 text-zinc-100 overflow-x-auto border border-zinc-800"><code id="claude-json-code">{
+  "mcpServers": {
+    "changewatch": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "{{ mcp_http_url }}"]
+    }
+  }
+}</code></pre>
+        </div>
+
+        <div class="p-4 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-900/60 text-xs text-indigo-900 dark:text-indigo-200 space-y-1">
+          <div class="font-bold">OAuth 2.0 Flow with Claude:</div>
+          <p>On your first prompt touching ChangeWatch, Claude Desktop will automatically pop open your browser to ChangeWatch's authorization consent screen (<code class="font-mono">/oauth/authorize</code>). Click <strong>Authorize AI Access</strong> to link your account securely.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cursor Setup -->
+  <section id="cursor" class="space-y-4">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+      <h2 class="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">3. Cursor IDE Setup</h2>
+    </div>
+
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-6 space-y-4 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+        <ol class="list-decimal pl-5 space-y-2 text-zinc-700 dark:text-zinc-200">
+          <li>Open <strong>Cursor Settings</strong> &rarr; <strong>Features</strong> &rarr; <strong>MCP</strong>.</li>
+          <li>Click <strong>+ Add New MCP Server</strong>.</li>
+          <li>Set <strong>Name</strong> to <code class="font-mono text-zinc-900 dark:text-zinc-100">changewatch</code>.</li>
+          <li>Set <strong>Type</strong> to <code class="font-mono text-zinc-900 dark:text-zinc-100">command</code> with command <code class="font-mono text-zinc-900 dark:text-zinc-100">npx -y mcp-remote {{ mcp_http_url }}</code>, or select <strong>SSE/HTTP</strong> and enter <code class="font-mono text-zinc-900 dark:text-zinc-100">{{ mcp_http_url }}</code>.</li>
+          <li>Cursor will now discover all 9 ChangeWatch tools automatically in Composer and Chat!</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- OAuth & Personal Access Tokens -->
+  <section id="oauth-auth" class="space-y-4">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-amber-600"></span>
+      <h2 class="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">4. Authentication & Security</h2>
+    </div>
+
+    <div class="double-bezel">
+      <div class="double-bezel-inner p-6 space-y-4 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+        <p>
+          ChangeWatch implements a native <strong>RFC 8414 &amp; RFC 6749 OAuth 2.0 Authorization Server</strong> with <strong>RFC 7636 PKCE S256</strong> verification.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+            <div class="font-bold text-zinc-950 dark:text-zinc-100">Standard OAuth 2.0 Flow</div>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">Interactive clients query <code class="font-mono">/.well-known/oauth-authorization-server</code> and complete consent via browser redirect.</p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+            <div class="font-bold text-zinc-950 dark:text-zinc-100">Personal Access Bearer Tokens</div>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">For headless scripts and CLI tools, copy your personal pre-generated token directly from <a href="/settings/notifications#mcp-settings" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold">User Settings &rarr;</a>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 Management Tools Reference -->
+  <section id="tools-reference" class="space-y-4">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-purple-600"></span>
+      <h2 class="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">5. Available MCP Tools Reference</h2>
+    </div>
+
+    <div class="double-bezel overflow-hidden">
+      <div class="double-bezel-inner p-0 overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/75 dark:bg-zinc-900/75 text-zinc-500 dark:text-zinc-400 font-mono text-[11px]">
+              <th class="p-4">Tool Name</th>
+              <th class="p-4">Action</th>
+              <th class="p-4">Key Parameters</th>
+              <th class="p-4">Description</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-zinc-200/80 dark:divide-zinc-800/80 text-zinc-700 dark:text-zinc-300">
+            <tr>
+              <td class="p-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">list_monitors</td>
+              <td class="p-4"><span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-mono text-[10px]">READ</span></td>
+              <td class="p-4 font-mono text-zinc-400">—</td>
+              <td class="p-4">Query all monitors owned by the user, including status, frequency, and change timestamps.</td>
+            </tr>
+            <tr>
+              <td class="p-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">get_monitor</td>
+              <td class="p-4"><span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-mono text-[10px]">READ</span></td>
+              <td class="p-4 font-mono">monitor_id</td>
+              <td class="p-4">Inspect monitor configuration, CSS selectors, keywords, and captured version counts.</td>
+            </tr>
+            <tr>
+              <td class="p-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">create_monitor</td>
+              <td class="p-4"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-mono text-[10px]">WRITE</span></td>
+              <td class="p-4 font-mono">url, name, interval_minutes, sensitivity</td>
+              <td class="p-4">Create a new monitor with SSRF security verification and auto-baseline capture.</td>
+            </tr>
+            <tr>
+              <td class="p-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">update_monitor</td>
+              <td class="p-4"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-mono text-[10px]">WRITE</span></td>
+              <td class="p-4 font-mono">monitor_id, name, interval_minutes</td>
+              <td class="p-4">Update frequencies, sensitivity thresholds, CSS region selectors, or keywords.</td>
+            </tr>
+            <tr>
+              <td class="p-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">pause_monitor</td>
+              <td class="p-4"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-mono text-[10px]">WRITE</span></td>
+              <td class="p-4 font-mono">monitor_id</td>
+              <td class="p-4">Suspend scheduled automated checks for a monitor without deleting it.</td>
+            </tr>
+            <tr>
+              <td class="p-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">resume_monitor</td>
+              <td class="p-4"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-mono text-[10px]">WRITE</span></td>
+              <td class="p-4 font-mono">monitor_id</td>
+              <td class="p-4">Resume background polling on a paused monitor.</td>
+            </tr>
+            <tr>
+              <td class="p-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">delete_monitor</td>
+              <td class="p-4"><span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-mono text-[10px]">DELETE</span></td>
+              <td class="p-4 font-mono">monitor_id</td>
+              <td class="p-4">Safely delete a monitor and purge pending jobs.</td>
+            </tr>
+            <tr>
+              <td class="p-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">trigger_check</td>
+              <td class="p-4"><span class="px-2 py-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-mono text-[10px]">EXECUTE</span></td>
+              <td class="p-4 font-mono">monitor_id</td>
+              <td class="p-4">Trigger an immediate headless browser capture, noise suppression, and diff calculation.</td>
+            </tr>
+            <tr>
+              <td class="p-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">get_diff</td>
+              <td class="p-4"><span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-mono text-[10px]">READ</span></td>
+              <td class="p-4 font-mono">monitor_id, from_version_id, to_version_id</td>
+              <td class="p-4">Retrieve unified text diff lines and change summaries between captured versions.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function copySnippet(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+      const originalText = btn.innerText;
+      btn.innerText = 'Copied!';
+      btn.classList.add('bg-emerald-600', 'text-white');
+      setTimeout(() => {
+        btn.innerText = originalText;
+        btn.classList.remove('bg-emerald-600', 'text-white');
+      }, 2000);
+    });
+  }
+</script>
+{% endblock %}

@@ -10,8 +10,24 @@ from app.dependencies import get_current_user, get_or_create_csrf_token, validat
 from app.services.security import encrypt_secret, decrypt_secret, mask_secret
 from app.services.notifier import send_email_alert, send_discord_webhook_alert
 
+from app.services.oauth import create_access_token
+from app.config import settings
+
 router = APIRouter(prefix="/settings")
 templates = Jinja2Templates(directory="app/templates")
+
+
+def _get_base_url(request: Request) -> str:
+    if settings.is_production or (settings.APP_BASE_URL and "changewatch.aayushsrivastava.com" in settings.APP_BASE_URL):
+        return "https://changewatch.aayushsrivastava.com"
+    if settings.APP_BASE_URL and settings.APP_BASE_URL.startswith("http"):
+        return settings.APP_BASE_URL.rstrip("/")
+    return str(request.base_url).rstrip("/")
+
+
+@router.get("", include_in_schema=False)
+async def settings_root_redirect():
+    return RedirectResponse(url="/settings/notifications", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.get("/notifications", response_class=HTMLResponse)
@@ -32,11 +48,19 @@ async def notifications_settings_page(
         except Exception:
             ch.masked_destination = "********"
 
+    base_url = _get_base_url(request)
+    mcp_server_url = f"{base_url}/mcp"
+    sse_server_url = f"{base_url}/sse"
+    mcp_token = create_access_token(user_id=current_user.id)
+
     csrf_token = get_or_create_csrf_token(request)
     return templates.TemplateResponse(request, "settings/notifications.html", {
         "current_user": current_user,
         "csrf_token": csrf_token,
         "channels": channels,
+        "mcp_server_url": mcp_server_url,
+        "sse_server_url": sse_server_url,
+        "mcp_token": mcp_token,
     })
 
 

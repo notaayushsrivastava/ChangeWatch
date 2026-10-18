@@ -13,13 +13,17 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from pydantic import HttpUrl
+from fastapi_mcp import FastApiMCP, AuthConfig, OAuthMetadata
+
 from app.config import settings
 from app.db import engine, Base
-from app.routes import auth, dashboard, monitors, versions, settings as settings_routes, worker_tick, pages
+from app.dependencies import get_current_mcp_user
+from app.routes import auth, dashboard, monitors, versions, settings as settings_routes, worker_tick, pages, oauth, api
 from app.services.scheduler_service import scheduler_loop
 
 # Keep schema bootstrap out of production/serverless imports. Run
@@ -101,6 +105,44 @@ app.include_router(versions.router)
 app.include_router(settings_routes.router)
 app.include_router(worker_tick.router)
 app.include_router(pages.router)
+app.include_router(oauth.router)
+app.include_router(api.router)
+
+# Model Context Protocol (MCP) Server setup with native OAuth 2.0
+_base_url_str = (
+    "https://changewatch.aayushsrivastava.com"
+    if (settings.is_production or (settings.APP_BASE_URL and "changewatch.aayushsrivastava.com" in settings.APP_BASE_URL))
+    else (
+        settings.APP_BASE_URL.rstrip("/")
+        if settings.APP_BASE_URL and settings.APP_BASE_URL.startswith("http")
+        else "http://localhost:8000"
+    )
+)
+
+mcp_auth_config = AuthConfig(
+    dependencies=[Depends(get_current_mcp_user)],
+    custom_oauth_metadata=OAuthMetadata(
+        issuer=HttpUrl(_base_url_str),
+        authorization_endpoint=HttpUrl(f"{_base_url_str}/oauth/authorize"),
+        token_endpoint=HttpUrl(f"{_base_url_str}/oauth/token"),
+        registration_endpoint=HttpUrl(f"{_base_url_str}/oauth/register"),
+        scopes_supported=["openid", "profile", "email", "monitors"],
+        response_types_supported=["code"],
+        grant_types_supported=["authorization_code"],
+        token_endpoint_auth_methods_supported=["none", "client_secret_post"],
+        code_challenge_methods_supported=["S256", "plain"],
+    ),
+)
+
+mcp = FastApiMCP(
+    app,
+    name="ChangeWatch MCP Server",
+    description="Full management suite for web monitors, checks, and diffs linked to your ChangeWatch account.",
+    include_tags=["mcp"],
+    auth_config=mcp_auth_config,
+)
+mcp.mount_http(app, "/mcp")
+mcp.mount_sse(app, "/sse")
 
 templates = Jinja2Templates(directory="app/templates")
 

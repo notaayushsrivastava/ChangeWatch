@@ -13,7 +13,11 @@ class Settings(BaseSettings):
 
     APP_ENV: str = "development"
     APP_SECRET_KEY: str = "changewatch-dev-secret-key-at-least-32-chars-long!"  # Development fallback only
-    APP_BASE_URL: str = "http://localhost:8000"
+    APP_BASE_URL: str = (
+        "https://changewatch.aayushsrivastava.com"
+        if (os.getenv("VERCEL") or os.getenv("APP_ENV") == "production")
+        else "http://localhost:8000"
+    )
 
     DATABASE_URL: str = "sqlite:///./changewatch.db"
     # Explicit, temporary escape hatch for one-off Alembic migrations during recovery.

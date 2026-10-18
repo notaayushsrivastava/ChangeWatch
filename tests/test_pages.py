@@ -117,3 +117,19 @@ def test_landing_page_does_not_contain_konami_code_reference():
     assert "cw-cookie-banner" in response.text
     # Must contain favicon links
     assert 'href="/static/favicon.svg"' in response.text
+    # Top bar must contain MCP tag linking to /docs/mcp
+    assert 'href="/docs/mcp"' in response.text
+    assert '>MCP<' in response.text
+    # Footer must contain MCP Integration link instead of llms.txt link
+    assert 'MCP Integration' in response.text
+
+
+def test_mcp_docs_page_loads():
+    response = client.get("/docs/mcp")
+    assert response.status_code == 200
+    assert "Model Context Protocol" in response.text
+    assert "claude_desktop_config.json" in response.text
+    assert "Cursor IDE Setup" in response.text
+    assert "list_monitors" in response.text
+    assert "create_monitor" in response.text
+
