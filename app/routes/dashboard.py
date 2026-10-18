@@ -13,6 +13,24 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 
+def _as_utc(value: datetime) -> datetime:
+    """Normalize database datetimes to UTC before comparing them.
+
+    SQLAlchemy DateTime columns are timezone-naive in this schema, even though
+    the application writes UTC timestamps. Treat naive values as UTC; convert
+    aware values to UTC so both storage forms are safe to compare.
+    """
+    if value.tzinfo is None or value.utcoffset() is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def _is_recent_change(changed_at: Optional[datetime], cutoff: datetime) -> bool:
+    if changed_at is None:
+        return False
+    return _as_utc(changed_at) >= _as_utc(cutoff)
+
+
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):
     user = get_current_user_optional(request, db)
@@ -41,7 +59,7 @@ async def dashboard_page(
         "paused": sum(1 for m in all_monitors if m.state == "paused"),
         "attention": sum(1 for m in all_monitors if m.last_status in ("error", "blocked")),
         "errors": sum(1 for m in all_monitors if m.last_status in ("error", "blocked")),
-        "recent_changes": sum(1 for m in all_monitors if m.last_changed_at and m.last_changed_at >= day_ago),
+        "recent_changes": sum(1 for m in all_monitors if _is_recent_change(m.last_changed_at, day_ago)),
     }
 
     # Filter monitors if requested
