@@ -17,6 +17,7 @@ from app.dependencies import get_current_user, get_or_create_csrf_token, validat
 from app.services.url_safety import validate_public_url
 from app.services.queue_service import enqueue_check, process_check_job
 from app.services.browser_capture import browser_capture_service
+from app.services.preview_html import ensure_preview_base_href
 
 router = APIRouter(prefix="/monitors")
 templates = Jinja2Templates(directory="app/templates")
@@ -392,7 +393,10 @@ async def preview_dom_endpoint(
             status_code=error_status,
         )
 
-    html = capture.dom_html or "<html><body>Empty page</body></html>"
+    html = ensure_preview_base_href(
+        capture.dom_html or "<html><body>Empty page</body></html>",
+        monitor.url,
+    )
 
     # Sanitize HTML: Strip dangerous scripts, event handlers, and active tags
     html = re.sub(r"<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>", "", html, flags=re.IGNORECASE)
