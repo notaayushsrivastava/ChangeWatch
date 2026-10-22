@@ -2,6 +2,8 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
+from botocore.config import Config
+
 from app.config import settings
 
 
@@ -23,7 +25,11 @@ class ArtifactStorage:
         if self._s3_client is None:
             import boto3
 
-            kwargs = {"region_name": settings.S3_REGION or None}
+            kwargs = {
+                "region_name": settings.S3_REGION or None,
+                # Neon object storage requires path-style bucket addressing.
+                "config": Config(s3={"addressing_style": "path"}),
+            }
             if settings.S3_ENDPOINT_URL.strip():
                 kwargs["endpoint_url"] = settings.S3_ENDPOINT_URL.strip()
             # Leave credentials to the SDK's role/identity chain unless explicit keys were configured.
